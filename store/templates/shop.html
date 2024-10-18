@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muster Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap');
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        nav {
+            background-color: #151515; /* พื้นหลังสีฟ้า */
+            color: white; /* สีข้อความ */
+            padding: 10px; /* ระยะห่างภายใน */
+        }
+        </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Navbar -->
+    <nav class="p-4 text-white">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+        <!-- Logo -->
+        <div class="text-4xl font-bold tracking-wider pl-8">Muster</div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full md:w-1/2 mt-4 md:mt-0">
+            <input type="text" placeholder="Search for product by brands, model or try..." class="w-full p-3 pl-12 pr-12 rounded-full bg-gray-300 text-gray-700 text-sm">
+            <button class="absolute left-4 top-3 text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Hamburger Icon for Mobile -->
+        <div class="pr-28">
+            <button>
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+        </div>
+
+        <!-- Menu -->
+        <div class="mt-4 flex justify-center space-x-16 text-lg font-semibold text-white">
+            <a href="{% url 'shoe_all' %}" class="hover:text-gray-400">Shop All</a>
+            <a href="#" class="hover:text-gray-400">Running</a>
+            <a href="#" class="hover:text-gray-400">Basket Ball</a>
+            <a href="#" class="hover:text-gray-400">Fashion</a>
+            <a href="{% url 'shoe_list' %}" class="hover:text-gray-400">More</a>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu (Dropdown Options) -->
+    <div id="mobile-menu" class="hidden bg-gray-800 text-white p-4">
+        <a href="{% url 'profile' %}" class="block py-2 hover:bg-gray-700">Profile</a>
+        <a href="#" class="block py-2 hover:bg-gray-700">Points</a>
+        <a href="#" class="block py-2 hover:bg-gray-700">Settings</a>
+        <a href="{% url 'custom_logout' %}" class="block py-2 hover:bg-gray-700">Logout</a>
+    </div>
+
+    <!-- Banner -->
+    <section class="relative bg-white p-6">
+        <img src="" alt="Sale Banner" class="w-full h-auto">
+        <div class="absolute top-2 left-4 flex space-x-4">
+            <img src="" class="w-12 h-12">
+            <img src="" class="w-12 h-12">
+        </div>
+    </section>
+
+    <!-- Category Links -->
+    <section class="p-6 flex justify-center space-x-10 text-center">
+        <a href="#" class="text-center">
+            <img src="" class="w-16 h-16 mx-auto">
+            <p class="mt-2">NIKE</p>
+        </a>
+        <a href="#" class="text-center">
+            <img src="" class="w-16 h-16 mx-auto">
+            <p class="mt-2">ADIDAS</p>
+        </a>
+        <a href="#" class="text-center">
+            <img src="" class="w-16 h-16 mx-auto">
+            <p class="mt-2">CONVERSE</p>
+        </a>
+        <a href="#" class="text-center">
+            <img src="" class="w-16 h-16 mx-auto">
+            <p class="mt-2">JORDAN</p>
+        </a>
+    </section>
+
+    <!-- Products -->
+    <section class="p-6 bg-gray-100">
+        <h2 class="text-center text-2xl font-bold mb-4">Retail and Below Retail Price</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-4 shadow-md">
+                <img src="" class="w-full h-auto">
+                <p class="mt-2 font-bold">AIR JORDAN 1</p>
+                <p class="text-gray-500 line-through">฿7,000</p>
+                <p class="text-red-500">฿6,480</p>
+            </div>
+            <div class="bg-white p-4 shadow-md">
+                <img src="" class="w-full h-auto">
+                <p class="mt-2 font-bold">JORDAN 1 MID SE</p>
+                <p class="text-red-500">฿4,477</p>
+            </div>
+            <div class="bg-white p-4 shadow-md">
+                <img src="" class="w-full h-auto">
+                <p class="mt-2 font-bold">YEEZY 700 V3</p>
+                <p class="text-red-500">฿3,500</p>
+            </div>
+        </div>
+        <div class="text-center mt-6">
+            <button class="bg-black text-white p-2 rounded">More ></button>
+        </div>
+    </section>
+
+    <!-- Gender Categories -->
+    <section class="p-6 bg-white text-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="p-4">
+                <img src="" alt="Men" class="w-full h-auto">
+                <p class="mt-2 text-lg font-bold">Men</p>
+                <button class="bg-black text-white p-2 rounded mt-2">Shop now</button>
+            </div>
+            <div class="p-4">
+                <img src="" alt="Women" class="w-full h-auto">
+                <p class="mt-2 text-lg font-bold">Women</p>
+                <button class="bg-black text-white p-2 rounded mt-2">Shop now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Just Dropped -->
+    <section class="p-6 bg-gray-100">
+        <h2 class="text-center text-2xl font-bold mb-4">Just Dropped</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-4 shadow-md">
+                <img src="" class="w-full h-auto">
+                <p class="mt-2 font-bold">NIKE AIR MAX</p>
+                <p class="text-red-500">฿4,900</p>
+            </div>
+            <div class="bg-white p-4 shadow-md">
+                <img src="" class="w-full h-auto">
+                <p class="mt-2 font-bold">AIR JORDAN 6</p>
+                <p class="text-red-500">฿5,500</p>
+            </div>
+            <div class="bg-white p-4 shadow-md">
+                <img src="" class="w-full h-auto">
+                <p class="mt-2 font-bold">YEEZY BOOST 350</p>
+                <p class="text-red-500">฿7,000</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white p-6">
+        <div class="text-center">
+            <h3 class="font-bold">#MUSTERONMUSTER</h3>
+            <p class="text-sm">Snap a photo and use our hashtag to get featured on Muster</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                <img src="" class="w-full h-auto">
+                <img src="" class="w-full h-auto">
+                <img src="" class="w-full h-auto">
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

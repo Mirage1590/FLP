@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe List with Filters</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+    <h1 class="text-3xl font-bold mb-4">Shoe List</h1>
+
+    <!-- ฟอร์มกรองข้อมูล -->
+    <form method="GET" action="" class="mb-6 p-4 bg-white rounded shadow-md">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- กรองตามแบรนด์ -->
+            <div>
+                <label for="brand" class="block text-sm font-medium text-gray-700">Brand</label>
+                <select id="brand" name="brand" class="block w-full p-2 border border-gray-300 rounded">
+                    <option value="">All Brands</option>
+                    <option value="Nike">Nike</option>
+                    <option value="Adidas">Adidas</option>
+                    <option value="Puma">Puma</option>
+                </select>
+            </div>
+
+            <!-- กรองตามประเภท -->
+            <div>
+                <label for="shoe_type" class="block text-sm font-medium text-gray-700">Type</label>
+                <select id="shoe_type" name="shoe_type" class="block w-full p-2 border border-gray-300 rounded">
+                    <option value="">All Types</option>
+                    <option value="Running">Running</option>
+                    <option value="Basketball">Basketball</option>
+                    <option value="Casual">Casual</option>
+                </select>
+            </div>
+
+            <!-- กรองตามราคาขั้นต่ำ -->
+            <div>
+                <label for="min_price" class="block text-sm font-medium text-gray-700">Min Price</label>
+                <input type="number" id="min_price" name="min_price" class="block w-full p-2 border border-gray-300 rounded" placeholder="Min Price">
+            </div>
+
+            <!-- กรองตามราคาสูงสุด -->
+            <div>
+                <label for="max_price" class="block text-sm font-medium text-gray-700">Max Price</label>
+                <input type="number" id="max_price" name="max_price" class="block w-full p-2 border border-gray-300 rounded" placeholder="Max Price">
+            </div>
+        </div>
+
+        <!-- ปุ่มสำหรับกรองข้อมูล -->
+        <div class="mt-4">
+            <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Filter</button>
+        </div>
+    </form>
+
+    <!-- แสดงรายการรองเท้า -->
+    <div class="overflow-x-auto">
+        <table class="table-auto w-full bg-white shadow-md rounded border border-gray-200">
+            <thead>
+                <tr class="bg-gray-200 text-gray-700">
+                    <th class="px-4 py-2">Brand</th>
+                    <th class="px-4 py-2">Model</th>
+                    <th class="px-4 py-2">Type</th>
+                    <th class="px-4 py-2">Gender</th>
+                    <th class="px-4 py-2">Size</th>
+                    <th class="px-4 py-2">Color</th>
+                    <th class="px-4 py-2">Material</th>
+                    <th class="px-4 py-2">Price (USD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for shoe in shoes %}
+                <tr>
+                    <td class="border px-4 py-2">{{ shoe.brand }}</td>
+                    <td class="border px-4 py-2">{{ shoe.model }}</td>
+                    <td class="border px-4 py-2">{{ shoe.shoe_type }}</td>
+                    <td class="border px-4 py-2">{{ shoe.gender }}</td>
+                    <td class="border px-4 py-2">{{ shoe.size }}</td>
+                    <td class="border px-4 py-2">{{ shoe.color }}</td>
+                    <td class="border px-4 py-2">{{ shoe.material }}</td>
+                    <td class="border px-4 py-2">{{ shoe.price }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4">No products found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

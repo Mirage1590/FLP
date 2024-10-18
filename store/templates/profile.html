@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Header -->
+    <header class="bg-black text-white p-4 flex justify-between items-center">
+        <a href="{% url 'shop' %}" class="bg-white text-black px-4 py-2 rounded-full">Home</a>
+        <h1 class="text-4xl font-bold">Profile</h1>
+        <button class="text-white text-2xl">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-8 h-8">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5v14" />
+            </svg>
+        </button>
+    </header>
+
+    <!-- Profile Section -->
+    <section class="text-center bg-black text-white p-6">
+        <img src="/media/profile.jpg" alt="Profile Image" class="w-32 h-32 rounded-full mx-auto border-4 border-white">
+        <h2 class="mt-4 text-2xl font-bold">PANNAWIT JITPIMONWAT</h2>
+        <p class="text-gray-400">📍 THAILAND , UBON</p>
+
+        <!-- Stats Section -->
+        <div class="flex justify-center space-x-12 mt-4">
+            <div>
+                <p class="text-2xl font-bold">605</p>
+                <p class="text-gray-400">FOLLOWERS</p>
+            </div>
+            <div>
+                <p class="text-2xl font-bold">559</p>
+                <p class="text-gray-400">FOLLOWING</p>
+            </div>
+            <div>
+                <p class="text-2xl font-bold">2.9K</p>
+                <p class="text-gray-400">LIKES</p>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-center space-x-4 mt-6">
+            <a href="{% url 'edit_profile' %}" class="bg-white text-black px-6 py-2 rounded-full font-bold">Edit Profile</a>
+            <button class="bg-white text-black px-6 py-2 rounded-full font-bold">Add Friends</button>
+        </div>
+    </section>
+
+    <!-- Photos and Likes Section -->
+    <section class="bg-gray-100 p-6">
+        <div class="grid grid-cols-2 gap-6">
+            <div class="text-center">
+                <h3 class="text-lg font-bold">PHOTOS</h3>
+                <div class="border-t-2 mt-2"></div>
+                <div class="mt-4 grid grid-cols-3 gap-4">
+                    <div class="bg-gray-300 h-24 flex items-center justify-center">📷</div>
+                    <div class="bg-gray-300 h-24 flex items-center justify-center">📷</div>
+                    <div class="bg-gray-300 h-24 flex items-center justify-center">📷</div>
+                </div>
+            </div>
+            <div class="text-center">
+                <h3 class="text-lg font-bold">LIKES</h3>
+                <div class="border-t-2 mt-2"></div>
+                <div class="mt-4 grid grid-cols-3 gap-4">
+                    <div class="bg-gray-300 h-24 flex items-center justify-center">❤️</div>
+                    <div class="bg-gray-300 h-24 flex items-center justify-center">❤️</div>
+                    <div class="bg-gray-300 h-24 flex items-center justify-center">❤️</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

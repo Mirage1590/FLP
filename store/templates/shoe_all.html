@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shoe List</title>
+</head>
+<body>
+    <h1>Shoe List</h1>
+    <div>
+        {% for shoe in shoes %}
+            <div>
+                <h2>{{ shoe.brand }} - {{ shoe.model }}</h2>
+                <p>Type: {{ shoe.shoe_type }}</p>
+                <p>Gender: {{ shoe.gender }}</p>
+                <p>Size: {{ shoe.size }}</p>
+                <p>Color: {{ shoe.color }}</p>
+                <p>Material: {{ shoe.material }}</p>
+                <p>Price: ${{ shoe.price }}</p>
+            </div>
+            <hr>
+        {% endfor %}
+    </div>
+</body>
+</html>

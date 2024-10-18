@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: url('/media/start.png') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .login-container {
+            background-color: rgb(21, 21, 21);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 300px;
+            text-align: center;
+        }
+        .login-input {
+            background-color: #e0e0e0;
+            color: #333;
+            padding: 0.75rem;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 1rem;
+            border: none;
+            text-align: center;
+        }
+        .login-button {
+            background-color: transparent;
+            border: 2px solid white;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .login-button:hover {
+            background-color: white;
+            color: black;
+        }
+        .social-icons img {
+            width: 40px;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-start justify-center h-screen bg-black text-white p-6 ml-56">
+    <div class="login-container">
+        <img src="/media/logo0.png" alt="Muster Logo" class="w-16 h-auto mx-auto">
+        <h1 class="text-white text-3xl font-bold mb-4">Muster</h1>
+
+        <!-- ฟอร์มล็อกอิน -->
+        <form method="POST" action="{% url 'custom_login' %}">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" class="login-input">
+            <input type="password" name="password" placeholder="Password" class="login-input">
+            <button type="submit" class="login-button rounded-full">Login</button>
+
+            <div class="text-white text-sm mb-4">
+                <a href="{% url 'custom_register' %}" class="hover:underline">register</a>
+            </div>
+        </form>
+
+        <!-- ไอคอน Social Login -->
+        <div class="flex justify-center mt-6 social-icons">
+            <a href="#"><img src="/media/facebook.png" alt="Facebook"></a>
+            <a href="#"><img src="/media/line1.png" alt="LINE"></a>
+            <a href="#"><img src="/media/google0.png" alt="Google"></a>
+        </div>
+    </div>
+</body>
+</html>
