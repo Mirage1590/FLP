@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="min-h-screen flex flex-col">
+        <!-- Navbar -->
+        <nav class="bg-black p-4 text-white flex justify-between">
+            <h1 class="text-xl font-bold">Admin Dashboard</h1>
+            <a href="/logout" class="hover:underline">Logout</a>
+        </nav>
+
+        <!-- Dashboard Content -->
+        <div class="container mx-auto mt-6">
+            <div class="grid grid-cols-4 gap-4">
+                <!-- Orders Summary -->
+                <div class="bg-white p-6 shadow rounded-lg">
+                    <h2 class="text-lg font-semibold">Orders</h2>
+                    <p class="text-gray-700">Total Orders: {{ total_orders }}</p>
+                    <a href="{% url 'admin_orders' %}" class="text-blue-500 hover:underline">Manage Orders</a>
+                </div>
+
+                <!-- Payments Summary -->
+                <div class="bg-white p-6 shadow rounded-lg">
+                    <h2 class="text-lg font-semibold">Payments</h2>
+                    <p class="text-gray-700">Total Revenue: ${{ total_revenue }}</p>
+                    <a href="{%url 'manage_payments' %}" class="text-blue-500 hover:underline">Manage Payments</a>
+                </div>
+
+                <!-- Coupons Summary -->
+                <div class="bg-white p-6 shadow rounded-lg">
+                    <h2 class="text-lg font-semibold">Coupons</h2>
+                    <p class="text-gray-700">Active Coupons: {{ active_coupons }}</p>
+                    <a href="{% url 'admin_coupons' %}" class="text-blue-500 hover:underline">Manage Coupons</a>
+                </div>
+
+                <!-- Users Summary -->
+                <div class="bg-white p-6 shadow rounded-lg">
+                    <h2 class="text-lg font-semibold">Users</h2>
+                    <p class="text-gray-700">Total Users: {{ total_users }}</p>
+                    <a href="{% url 'manage_users' %}" class="text-blue-500 hover:underline">Manage Users</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

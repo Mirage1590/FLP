@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Coupons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navbar -->
+    <nav class="bg-black text-white p-4 flex justify-between items-center">
+        <a href="{% url 'shop' %}" class="text-2xl font-bold">Muster</a>
+        <a href="{% url 'shop' %}" class="text-gray-300 hover:text-white">Back to Shop</a>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        <!-- Section: Your Coupons -->
+        <h2 class="text-2xl font-semibold mb-4 flex items-center">
+            <span class="text-red-500 text-3xl mr-2">🎟️</span> Your Coupons
+        </h2>
+
+        <!-- Available Coupons Section -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="user-coupons">
+            {% for user_coupon in user_coupons %}
+                <div class="p-4 rounded-lg shadow-md {% if user_coupon.status == 'used' %} bg-gray-300 {% else %} bg-gray-200 {% endif %}">
+                    <h3 class="text-lg font-semibold">{{ user_coupon.coupon.code }}</h3>
+                    <p class="text-gray-600">Discount:
+                        {% if user_coupon.coupon.discount_type == "percentage" %}
+                            {{ user_coupon.coupon.discount_value }}%
+                        {% else %}
+                            ${{ user_coupon.coupon.discount_value }}
+                        {% endif %}
+                    </p>
+                    <p class="text-gray-400 text-sm">Expires: {{ user_coupon.coupon.expiry_date }}</p>
+                    {% if user_coupon.status == 'used' %}
+                        <span class="text-gray-500 font-bold">Used</span>
+                    {% else %}
+                        <button class="text-green-500 font-bold" data-coupon-id="{{ user_coupon.coupon.id }}" onclick="useCoupon({{ user_coupon.coupon.id }})">✔️ Active</button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Link to Available Coupons -->
+        <div class="mt-6 text-center">
+            <a href="{% url 'available_coupons' %}" class="text-blue-500 hover:text-blue-700 font-semibold">Go to Available Coupons</a>
+        </div>
+    </div>
+
+<script>
+    function useCoupon(couponId) {
+        fetch(`/checkout/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ coupon_id: couponId })  // ส่ง coupon_id ไป
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+
+                // อัปเดตสถานะในหน้า Your Coupons
+                let couponButton = document.querySelector(`button[data-coupon-id='${couponId}']`);
+                couponButton.textContent = "Used";  // เปลี่ยนข้อความปุ่มเป็น "Used"
+                couponButton.disabled = true;  // ปิดการใช้งานปุ่ม
+
+                let couponDiv = couponButton.closest('div');
+                couponDiv.classList.add('bg-gray-300');  // เปลี่ยนสีพื้นหลัง
+                couponDiv.querySelector('span').textContent = 'Used';  // แสดงสถานะเป็น 'Used'
+            } else {
+                alert(data.error);
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+</body>
+</html>

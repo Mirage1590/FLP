@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Coupons</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navbar -->
+    <nav class="bg-black text-white p-4 flex justify-between items-center">
+        <a href="{% url 'shop' %}" class="text-2xl font-bold">Muster</a>
+        <a href="{% url 'your_coupon' %}" class="text-gray-300 hover:text-white">Back to Your Coupons</a>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        <!-- Section: Available Coupons -->
+        <h2 class="text-2xl font-semibold mb-4 flex items-center">
+            <span class="text-red-500 text-3xl mr-2">🎟️</span> Available Coupons
+        </h2>
+
+        <!-- Available Coupons -->
+        <div class="grid grid-cols-2 gap-4">
+            {% for coupon in available_coupons %}
+                <div class="p-4 border rounded {% if coupon.status == 'expired' %}bg-gray-300{% else %}bg-white{% endif %}" id="coupon-{{ coupon.id }}">
+                    <h3 class="font-semibold">{{ coupon.code }}</h3>
+                    <p>Discount: {{ coupon.discount_value }}{% if coupon.discount_type == 'percentage' %} %{% else %} ${% endif %}</p>
+                    <p>Expires: {{ coupon.expiry_date }}</p>
+
+                    {% if coupon.status == 'expired' %}
+                        <span class="text-red-500">Expired</span>
+                    {% else %}
+                        <!-- Check if the coupon is already saved by the user -->
+                        {% if coupon.id in saved_coupon_ids %}
+                            <span class="text-green-500 font-bold">✔️ Saved</span>
+                        {% else %}
+                            <button type="button" class="bg-blue-500 text-white p-2 rounded save-button" data-coupon-id="{{ coupon.id }}">Save</button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // AJAX save coupon function
+        function saveCoupon(couponId) {
+            $.ajax({
+                type: "POST",
+                url: "{% url 'save_coupon' 0 %}".replace('0', couponId),  // Send coupon_id in URL
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Remove the saved coupon from the Available Coupons section
+                        $('#coupon-' + couponId).remove();
+
+                        // Create HTML for the saved coupon with status 'Saved'
+                        var savedCouponHTML = `
+                            <div class="p-4 rounded-lg shadow-md bg-gray-200" id="user-coupon-${couponId}">
+                                <h3 class="text-lg font-semibold">${response.coupon.code}</h3>
+                                <p class="text-gray-600">Discount: ${response.coupon.discount_value} ${response.coupon.discount_type === 'percentage' ? '%' : '$'}</p>
+                                <p class="text-gray-400 text-sm">Expires: ${response.coupon.expiry_date}</p>
+                                <span class="text-green-500 font-bold">✔️ Saved</span>
+                            </div>
+                        `;
+                        // Append the saved coupon to the "Your Coupons" section
+                        $('#user-coupons').append(savedCouponHTML);
+                    } else {
+                        alert("Failed to save coupon!");
+                    }
+                }
+            });
+        }
+
+        // Handling the click event on the save button
+        document.addEventListener("DOMContentLoaded", function () {
+            const saveButtons = document.querySelectorAll(".save-button");
+
+            saveButtons.forEach(button => {
+                button.addEventListener("click", function (event) {
+                    const couponId = event.target.getAttribute("data-coupon-id");
+                    saveCoupon(couponId);  // Call the saveCoupon function
+                });
+            });
+        });
+    </script>
+</body>
+</html>

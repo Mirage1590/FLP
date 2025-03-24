@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Coupon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 flex justify-center items-center h-screen">
+
+    <div class="bg-white p-6 shadow-md rounded-lg w-96">
+        <h1 class="text-xl font-bold mb-4">Add Coupon</h1>
+        <form method="POST">
+            {% csrf_token %}
+
+            <label class="block font-semibold">Coupon Code:</label>
+            <input type="text" name="code" required class="w-full border p-2 rounded mb-3">
+
+            <label class="block font-semibold">Discount Type:</label>
+            <select name="discount_type" class="w-full border p-2 rounded mb-3">
+                <option value="fixed">Fixed Amount ($)</option>
+                <option value="percentage">Percentage (%)</option>
+            </select>
+
+            <label class="block font-semibold">Discount Value:</label>
+            <input type="number" name="discount_value" required class="w-full border p-2 rounded mb-3">
+
+            <label for="expiry_date" class="block font-semibold">Expiry Date & Time:</label>
+            <input type="datetime-local" id="expiry_date" name="expiry_date" class="w-full border p-2 rounded mb-3">
+
+            <div class="flex justify-between mt-4">
+                <!-- ปุ่ม Save -->
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Save Coupon</button>
+                <!-- ปุ่ม Cancel -->
+                <a href="{% url 'admin_coupons' %}" class="bg-red-500 text-white px-4 py-2 rounded">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>

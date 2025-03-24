@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Muster Shop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap');
@@ -15,159 +17,493 @@
             color: white; /* สีข้อความ */
             padding: 10px; /* ระยะห่างภายใน */
         }
+        .slideshow-container {
+          width: 100%;
+          max-width: 600px;
+          position: relative;
+          margin: auto;
+          overflow: hidden;
+        }
+
+        .slides {
+          display: flex;
+          transition: transform 1s ease-in-out;
+        }
+
+        .slides img {
+          width: 100%;
+          height: auto;
+        }
+
+        #mobile-menu {
+            max-height: 0; /* เริ่มต้นซ่อนเมนู */
+            overflow: hidden; /* ป้องกันการแสดงเนื้อหาเมนูเกิน */
+            transition: max-height 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* เอฟเฟกต์นุ่มนวล */
+        }
+
+        #mobile-menu.show {
+            max-height: 500px; /* ปรับความสูงให้พอดีกับเนื้อหา */
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .search-bar {
+            width: 100%; /* ให้ช่องค้นหายืดเต็มความกว้าง */
+            max-width: 600px; /* กำหนดความกว้างสูงสุด */
+            margin: auto; /* จัดกลาง */
+            padding: 10px;
+            border-radius: 20px;
+            background-color: #fff; /* กำหนดสีพื้นหลัง */
+            border: 1px solid #ddd; /* ขอบสีเทา */
+            font-size: 16px; /* กำหนดขนาดฟอนต์ */
+            color: #333; /* กำหนดสีตัวอักษรเป็นสีดำ */
+            position: relative; /* เพิ่มเพื่อให้สามารถจัดตำแหน่งของ #search-results ได้ */
+        }
+        #searchInput {
+            color: #000; /* ทำให้ตัวอักษรในช่องค้นหามีสีดำ */
+        }
+        #search-results {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            max-height: 300px; /* กำหนดความสูงของ dropdown */
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            position: absolute;
+            z-index: 1000;
+            top: 100%; /* ให้แสดงอยู่ใต้ช่องค้นหา */
+            left: 21.5%; /* ให้จัดตำแหน่งทางซ้ายสุด */
+            padding: 10px 0;
+            color: #333;
+        }
+        #search-results.show {
+            display: block;
+        }
+
+        /* สไตล์ของแต่ละรายการผลการค้นหา */
+        #search-results div {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        /* เพิ่มสีพื้นหลังเมื่อ hover บนผลการค้นหา */
+        #search-results div:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* สไตล์ของรูปภาพ */
+        #search-results img {
+            width: 60px;
+            height: 40px;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+
+        /* สไตล์ของชื่อสินค้า */
+        #search-results p {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        /* สไตล์ของราคา */
+        #search-results span {
+            font-size: 14px;
+            color: #777;
+            margin-left: auto;
+        }
+
         </style>
 </head>
 <body class="bg-gray-100">
 
     <!-- Navbar -->
-    <nav class="p-4 text-white">
-        <div class="flex flex-col md:flex-row items-center justify-between">
-        <!-- Logo -->
-        <div class="text-4xl font-bold tracking-wider pl-8">Muster</div>
+    <nav class="p-4 text-white bg-black">
+        <div class="flex items-center justify-between">
+            <!-- Logo -->
+            <a href="{% url 'shop' %}" class="text-4xl font-bold tracking-wider pl-10">Muster</a>
 
-        <!-- Search Bar -->
-        <div class="relative w-full md:w-1/2 mt-4 md:mt-0">
-            <input type="text" placeholder="Search for product by brands, model or try..." class="w-full p-3 pl-12 pr-12 rounded-full bg-gray-300 text-gray-700 text-sm">
-            <button class="absolute left-4 top-3 text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </button>
-        </div>
+            <!-- Search Bar (อยู่ตรงกลาง) -->
+            <div class="relative w-full md:w-1/2 mx-auto">
+                <input type="text" id="searchInput" name="q" placeholder="Search for shoes..." class="ml-40 text-center search-bar" onkeyup="searchShoes()">
+                <div id="search-results" class="absolute bg-white shadow-lg w-full max-h-60 overflow-y-auto z-10"></div>
+            </div>
 
-        <!-- Hamburger Icon for Mobile -->
-        <div class="pr-28">
-            <button>
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </div>
+            <!-- Cart Icon (แก้ไขให้ไม่ชิดกันเกินไป) -->
+            <div class="relative flex items-center space-x-16 pr-16">
+                <a href="{% url 'cart' %}" class="relative flex items-center">
+                    🛒 <span class="ml-1">Cart</span>
+                    <span id="cart-count"
+                        class="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded-full absolute -top-2 -right-3 transform translate-x-4">
+                        {{ cart_count }}
+                    </span>
+                </a>
+
+                <a href="{% url 'chat' chat_box_name='general' %}" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-comments"></i> Chat
+                </a>
+
+                <!-- Hamburger Icon for Mobile -->
+                <button onclick="toggleMenu()">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <!-- Menu -->
         <div class="mt-4 flex justify-center space-x-16 text-lg font-semibold text-white">
             <a href="{% url 'shoe_all' %}" class="hover:text-gray-400">Shop All</a>
-            <a href="#" class="hover:text-gray-400">Running</a>
-            <a href="#" class="hover:text-gray-400">Basket Ball</a>
-            <a href="#" class="hover:text-gray-400">Fashion</a>
+            <a href="{% url 'shoe_all' %}?category=Running" class="hover:text-gray-400">Running</a>
+            <a href="{% url 'shoe_all' %}?category=Basketball" class="hover:text-gray-400">Basketball</a>
+            <a href="{% url 'shoe_all' %}?category=Casual" class="hover:text-gray-400">Casual</a>
             <a href="{% url 'shoe_list' %}" class="hover:text-gray-400">More</a>
         </div>
     </nav>
 
     <!-- Mobile Menu (Dropdown Options) -->
     <div id="mobile-menu" class="hidden bg-gray-800 text-white p-4">
-        <a href="{% url 'profile' %}" class="block py-2 hover:bg-gray-700">Profile</a>
-        <a href="#" class="block py-2 hover:bg-gray-700">Points</a>
-        <a href="#" class="block py-2 hover:bg-gray-700">Settings</a>
-        <a href="{% url 'custom_logout' %}" class="block py-2 hover:bg-gray-700">Logout</a>
+        <a href="{% url 'profile' %}" class="block py-2 px-4 hover:bg-gray-700">Profile</a>
+        <a href="{% url 'order_history' %}" class="block py-2 px-4 hover:bg-gray-700">Order history</a>
+        <a href="{% url 'your_coupon' %}" class="block py-2 px-4 hover:bg-gray-700 rounded">Your Coupon</a>
+        <a href="{% url 'custom_logout' %}" class="block py-2 px-4 hover:bg-gray-700">Logout</a>
     </div>
 
     <!-- Banner -->
-    <section class="relative bg-white p-6">
-        <img src="" alt="Sale Banner" class="w-full h-auto">
-        <div class="absolute top-2 left-4 flex space-x-4">
-            <img src="" class="w-12 h-12">
-            <img src="" class="w-12 h-12">
-        </div>
-    </section>
+    <section class="relative bg-white p-28">
+    <div class="flex justify-between items-center">
+            <img src="/media/shoeicon.png" class="w-32 h-32" style="transform: scaleX(-1);">
+            <div class="relative slideshow-container max-w-auto mx-auto border-4 border-black rounded-lg shadow-lg overflow-hidden" >
+                <div class="slides">
+                    <img src="/media/promo0.jpg" alt="Promo 1" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo1.jpg" alt="Promo 2" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo2.png" alt="Promo 3" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo3.jpg" alt="Promo 4" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo4.jpg" alt="Promo 5" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo5.jpg" alt="Promo 6" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo6.jpg" alt="Promo 7" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo7.jpg" alt="Promo 8" class="object-cover aspect-[16/9]">
+                    <img src="/media/promo8.jpg" alt="Promo 9" class="object-cover aspect-[16/9]">
+                </div>
 
-    <!-- Category Links -->
-    <section class="p-6 flex justify-center space-x-10 text-center">
-        <a href="#" class="text-center">
-            <img src="" class="w-16 h-16 mx-auto">
-            <p class="mt-2">NIKE</p>
+                <button class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black text-white p-2" onclick="changeSlide(-1)">&#10094;</button>
+                <button class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black text-white p-2" onclick="changeSlide(1)">&#10095;</button>
+              </div>
+
+            <img src="/media/shoeicon.png" class="w-32 h-32">
+    </div>
+        <div class="p-6 flex justify-center space-x-10 text-center">
+            <a href="{% url 'shoe_all' %}?brand=Nike" class="text-center">
+            <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto">
+                <img src="/media/nike0.png" class="w-8 h-8 object-contain">
+            </div>
+            <p class="mt-2 font-bold">NIKE</p>
         </a>
-        <a href="#" class="text-center">
-            <img src="" class="w-16 h-16 mx-auto">
-            <p class="mt-2">ADIDAS</p>
+        <a href="{% url 'shoe_all' %}?brand=Adidas" class="text-center">
+            <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto">
+                <img src="/media/adidas.png" class="w-8 h-8 object-contain">
+            </div>
+            <p class="mt-2 font-bold">ADIDAS</p>
         </a>
-        <a href="#" class="text-center">
-            <img src="" class="w-16 h-16 mx-auto">
-            <p class="mt-2">CONVERSE</p>
+        <a href="{% url 'shoe_all' %}?brand=Converse" class="text-center">
+            <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto">
+                <img src="/media/converse.png" class="w-8 h-8 object-contain">
+            </div>
+            <p class="mt-2 font-bold">CONVERSE</p>
         </a>
-        <a href="#" class="text-center">
-            <img src="" class="w-16 h-16 mx-auto">
-            <p class="mt-2">JORDAN</p>
+        <a href="{% url 'shoe_all' %}?brand=Puma" class="text-center">
+            <div class="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto">
+                <img src="/media/puma.png" class="w-8 h-8 object-contain">
+            </div>
+            <p class="mt-2 font-bold">PUMA</p>
         </a>
+        </div>
     </section>
 
     <!-- Products -->
-    <section class="p-6 bg-gray-100">
+    <section class="p-6 bg-white">
         <h2 class="text-center text-2xl font-bold mb-4">Retail and Below Retail Price</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for shoe in shoes %}
             <div class="bg-white p-4 shadow-md">
-                <img src="" class="w-full h-auto">
-                <p class="mt-2 font-bold">AIR JORDAN 1</p>
-                <p class="text-gray-500 line-through">฿7,000</p>
-                <p class="text-red-500">฿6,480</p>
+                <a href="{% url 'shoe_detail' shoe.id %}">
+                    <img src="{{ shoe.image }}" class="w-full h-auto">
+                    <p class="mt-2 font-bold">{{ shoe.model }}</p>
+                    <p class="text-sm text-gray-600">{{ shoe.shoe_type }}</p>
+                    <p class="text-red-500">${{ shoe.price|floatformat:2 }}</p>
+                </a>
             </div>
-            <div class="bg-white p-4 shadow-md">
-                <img src="" class="w-full h-auto">
-                <p class="mt-2 font-bold">JORDAN 1 MID SE</p>
-                <p class="text-red-500">฿4,477</p>
-            </div>
-            <div class="bg-white p-4 shadow-md">
-                <img src="" class="w-full h-auto">
-                <p class="mt-2 font-bold">YEEZY 700 V3</p>
-                <p class="text-red-500">฿3,500</p>
-            </div>
-        </div>
-        <div class="text-center mt-6">
-            <button class="bg-black text-white p-2 rounded">More ></button>
+            {% endfor %}
         </div>
     </section>
 
     <!-- Gender Categories -->
     <section class="p-6 bg-white text-center">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="p-4">
-                <img src="" alt="Men" class="w-full h-auto">
-                <p class="mt-2 text-lg font-bold">Men</p>
-                <button class="bg-black text-white p-2 rounded mt-2">Shop now</button>
+            <!-- Card for Men -->
+            <div class="relative w-full">
+                <img src="/media/men.png" alt="Men" class="w-full h-auto object-cover aspect-[16/9] rounded-lg">
+                <div class="absolute bottom-4 right-4 text-white bg-opacity-75 p-4 rounded-lg">
+                    <p class="text-lg font-bold mb-2">Men</p>
+                    <a href="{% url 'shoe_all' %}?gender=Men" class="bg-black text-white px-4 py-2 rounded hover:bg-white hover:text-black">Shop now</a>
+                </div>
             </div>
-            <div class="p-4">
-                <img src="" alt="Women" class="w-full h-auto">
-                <p class="mt-2 text-lg font-bold">Women</p>
-                <button class="bg-black text-white p-2 rounded mt-2">Shop now</button>
+
+            <!-- Card for Women -->
+            <div class="relative w-full">
+                <img src="/media/women0.png" alt="Women" class="w-full h-auto object-cover aspect-[16/9] rounded-lg">
+                <div class="absolute bottom-4 right-4 text-white bg-opacity-75 p-4 rounded-lg">
+                    <p class="text-lg font-bold mb-2">Women</p>
+                    <a href="{% url 'shoe_all' %}?gender=Women" class="bg-black text-white px-4 py-2 rounded hover:bg-white hover:text-black">Shop now</a>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Just Dropped -->
-    <section class="p-6 bg-gray-100">
-        <h2 class="text-center text-2xl font-bold mb-4">Just Dropped</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-4 shadow-md">
-                <img src="" class="w-full h-auto">
-                <p class="mt-2 font-bold">NIKE AIR MAX</p>
-                <p class="text-red-500">฿4,900</p>
-            </div>
-            <div class="bg-white p-4 shadow-md">
-                <img src="" class="w-full h-auto">
-                <p class="mt-2 font-bold">AIR JORDAN 6</p>
-                <p class="text-red-500">฿5,500</p>
-            </div>
-            <div class="bg-white p-4 shadow-md">
-                <img src="" class="w-full h-auto">
-                <p class="mt-2 font-bold">YEEZY BOOST 350</p>
-                <p class="text-red-500">฿7,000</p>
-            </div>
-        </div>
-    </section>
 
     <!-- Footer -->
-    <footer class="bg-black text-white p-6">
+    <section class="bg-black text-white p-6">
         <div class="text-center">
-            <h3 class="font-bold">#MUSTERONMUSTER</h3>
+            <h3 class="font-bold">#MUSTERSTYLE</h3>
             <p class="text-sm">Snap a photo and use our hashtag to get featured on Muster</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                <img src="" class="w-full h-auto">
-                <img src="" class="w-full h-auto">
-                <img src="" class="w-full h-auto">
+
+            <!-- Container for scrolling -->
+            <div class="relative">
+                <!-- Button for scrolling left -->
+                <button
+                    class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black text-white p-2 z-10"
+                    onclick="scrollImages(-1)">
+                    &#10094;
+                </button>
+
+                <!-- Scrollable Image Container -->
+                <div id="imageContainer" class="flex overflow-x-scroll no-scrollbar space-x-2">
+                    <!-- First Group of Images -->
+                    <div class="flex-none w-[800px] text-center">
+                        <div class="grid grid-cols-3 gap-2">
+                            <!-- Image with text on top -->
+                            <div class="relative">
+                                <p class="absolute bottom-2 right-2 text-white text-sm px-2 py-1 rounded">
+                                    @yositatac
+                                </p>
+                                <img src="/media/post.png" alt="Post 1" class="w-full h-auto object-cover">
+                            </div>
+
+                            <div class="relative">
+                                <p class="absolute bottom-2 right-2 text-white text-sm px-2 py-1 rounded">
+                                    @thamontias
+                                </p>
+                                <img src="/media/post0.png" alt="Post 2" class="w-full h-auto object-cover">
+                            </div>
+
+                            <div class="relative">
+                                <p class="absolute bottom-2 right-2 text-white text-sm px-2 py-1 rounded">
+                                    @ipurse
+                                </p>
+                                <img src="/media/post1.png" alt="Post 3" class="w-full h-auto object-cover">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Second Group of Images -->
+                    <div class="flex-none w-[800px] text-center">
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="relative">
+                                <p class="absolute bottom-2 right-2 text-white text-sm px-2 py-1 rounded">
+                                    @namtanlitaa
+                                </p>
+                                <img src="/media/post2.png" alt="Post 4" class="w-full h-auto object-cover">
+                            </div>
+
+                            <div class="relative">
+                                <p class="absolute bottom-2 right-2 text-white text-sm px-2 py-1 rounded">
+                                    @aprilnaphatrada
+                                </p>
+                                <img src="/media/post3.png" alt="Post 5" class="w-full h-auto object-cover">
+                            </div>
+
+                            <div class="relative">
+                                <p class="absolute bottom-2 right-2 text-white text-sm px-2 py-1 rounded">
+                                    @beehalin
+                                </p>
+                                <img src="/media/post4.png" alt="Post 6" class="w-full h-auto object-cover">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Button for scrolling right -->
+                <button
+                    class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black text-white p-2 z-10"
+                    onclick="scrollImages(1)">
+                    &#10095;
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-white py-8">
+        <div class="container mx-auto px-6 lg:px-32 flex flex-wrap justify-between items-start">
+            <!-- Logo Section -->
+            <div class="w-full lg:w-1/4 mb-6 lg:mb-0">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-black text-white rounded-lg p-4 flex justify-center items-center">
+                        <span class="text-4xl font-bold">M</span>
+                    </div>
+                    <span class="text-3xl font-bold text-black">Muster</span>
+                </div>
+            </div>
+            <!-- About Muster -->
+            <div class="w-full lg:w-1/4 mb-6 lg:mb-0">
+                <h3 class="text-lg font-bold mb-4">ABOUT MUSTER</h3>
+                <ul>
+                    <li><a href="#" class="text-gray-600 hover:underline">Buyer Manual</a></li>
+                    <li><a href="#" class="text-gray-600 hover:underline">Authentication</a></li>
+                    <li><a href="#" class="text-gray-600 hover:underline">Seller Manual</a></li>
+                    <li><a href="#" class="text-gray-600 hover:underline">Muster Product Guideline</a></li>
+                </ul>
+            </div>
+            <!-- Customer Support -->
+            <div class="w-full lg:w-1/4 mb-6 lg:mb-0">
+                <h3 class="text-lg font-bold mb-4">CUSTOMER SUPPORT</h3>
+                <ul>
+                    <li><a href="#" class="text-gray-600 hover:underline">Contact Us</a></li>
+                    <li><a href="#" class="text-gray-600 hover:underline">Help Center</a></li>
+                </ul>
+            </div>
+            <!-- Follow Us -->
+            <div class="w-full lg:w-1/4 mb-6 lg:mb-0">
+                <h3 class="text-lg font-bold mb-4">FOLLOW US</h3>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-600 hover:text-black">
+                        <i class="fab fa-facebook-f text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-black">
+                        <i class="fab fa-instagram text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-black">
+                        <i class="fab fa-tiktok text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-black">
+                        <i class="fab fa-twitter text-xl"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </footer>
+
+
+    <script>
+      let slideIndex = 0;
+      const slides = document.querySelector('.slides');
+      const slideCount = slides.children.length;
+
+      function showSlides() {
+        slideIndex = (slideIndex + 1) % slideCount;
+        slides.style.transform = `translateX(-${slideIndex * 100}%)`;
+        setTimeout(showSlides, 3000); // สไลด์เปลี่ยนทุก 3 วินาที
+      }
+
+      function changeSlide(direction) {
+        slideIndex += direction;
+        if (slideIndex < 0) slideIndex = slideCount - 1;
+        if (slideIndex >= slideCount) slideIndex = 0;
+        slides.style.transform = `translateX(-${slideIndex * 100}%)`;
+      }
+
+      showSlides();
+
+      function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+                setTimeout(() => {
+                    menu.classList.add('hidden'); // ซ่อนจริงเมื่อ transition จบ
+                }, 600); // ต้องตรงกับเวลาใน CSS transition
+            } else {
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.add('show');
+                }, 10);
+            }
+        }
+
+        function scrollImages(direction) {
+            const container = document.getElementById("imageContainer");
+            const scrollAmount = 800; // Adjust this value to match the width of one group
+            container.scrollBy({
+                left: direction * scrollAmount,
+                behavior: "smooth",
+            });
+        }
+
+        function updateCartCount() {
+            fetch("/cart/count/")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("cart-count").textContent = data.cart_count;
+            })
+            .catch(error => console.error("Error updating cart count:", error));
+        }
+
+        // อัปเดตจำนวนตะกร้าทุกครั้งที่โหลดหน้าเว็บ
+        document.addEventListener("DOMContentLoaded", updateCartCount);
+        //
+
+        function searchShoes() {
+            const query = document.getElementById('searchInput').value;
+            const searchResultsDiv = document.getElementById('search-results');
+
+            // ซ่อน dropdown เมื่อไม่มีการพิมพ์คำค้นหา
+            if (query.length === 0) {
+                searchResultsDiv.classList.remove('show');
+                return;
+            }
+
+            searchResultsDiv.classList.add('show'); // แสดง dropdown เมื่อเริ่มพิมพ์
+
+            // ดึงข้อมูลผลการค้นหาจาก Django
+            fetch(`/search_shoes/?q=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResultsDiv.innerHTML = '';  // ล้างผลการค้นหาก่อน
+                    data.results.forEach(shoe => {
+                        const resultItem = document.createElement('div');
+                        resultItem.classList.add('p-2', 'cursor-pointer', 'hover:bg-gray-100');
+                        resultItem.innerHTML = `
+                            <div class="flex items-center space-between">
+                                <img src="${shoe.image}" alt="${shoe.model}" class="w-16 h-16 rounded-md">
+                                <p class="text-gray-800 font-medium">${shoe.model}</p>
+                                <span class="text-gray-600">$${shoe.price}</span>
+                            </div>
+                        `;
+
+                        resultItem.onclick = function() {
+                            window.location.href = `/shoe/${shoe.id}/`;  // ไปยังหน้ารายละเอียดสินค้าที่เลือก
+                        };
+
+                        searchResultsDiv.appendChild(resultItem);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+
 
 </body>
 </html>

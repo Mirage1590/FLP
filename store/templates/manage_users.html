@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="bg-black text-white p-4 flex justify-between">
+        <a href="{% url 'admin_dashboard' %}" class="text-2xl font-bold">Muster Admin</a>
+        <a href="{% url 'admin:index' %}" class="text-gray-300 hover:text-white">Django Admin</a>
+    </nav>
+
+    <div class="container mx-auto mt-6">
+        <h2 class="text-2xl font-semibold mb-4">Users Management</h2>
+
+        <!-- ปุ่ม Create User -->
+        <a href="{% url 'create_user' %}" class="bg-blue-500 text-white py-2 px-4 rounded-lg mb-4 inline-block hover:bg-blue-600">Create User</a>
+
+        <!-- ตารางแสดงรายชื่อผู้ใช้ -->
+        <table class="min-w-full bg-white shadow-md rounded-lg text-center">
+            <thead>
+                <tr>
+                    <th class="p-4 text-center">Username</th>
+                    <th class="p-4 text-center">Email</th>
+                    <th class="p-4 text-center">Role</th> <!-- เพิ่มคอลัมน์ Role -->
+                    <th class="p-4 text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr class="border-b">
+                        <td class="p-4">{{ user.username }}</td>
+                        <td class="p-4">{{ user.email }}</td>
+                        <td class="p-4">
+                            {% if user.is_staff %}
+                                Admin
+                            {% else %}
+                                User
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            <a href="{% url 'edit_user' user.id %}" class="text-blue-500 hover:underline">Edit</a> |
+                            <a href="#" onclick="confirmDelete({{ user.id }})" class="text-red-500 hover:underline">Delete</a> |
+                            <a href="{% url 'assign_role' user.id %}" class="text-yellow-500 hover:underline">Assign Role</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+<script>
+    function confirmDelete(userId) {
+        const confirmation = confirm("Are you sure you want to delete this user? This action cannot be undone.");
+        if (confirmation) {
+            // Redirect to the delete URL if the user confirms
+            window.location.href = `/delete_user/${userId}/`;  // URL of delete_user_view
+        }
+    }
+</script>
+
+</body>
+</html>

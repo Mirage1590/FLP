@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from django.conf import settings
+from django.conf.urls.static import static
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +30,7 @@ SECRET_KEY = "django-insecure-feuqw&yy0o(5-ig*$(+a=x246)jca@l35h98%3se+9idwa$ylz
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -36,8 +41,17 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    'daphne',
     "django.contrib.staticfiles",
     "store",
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
+    'social_django',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +62,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware"
 ]
 
 ROOT_URLCONF = "shoe_store.urls"
@@ -63,6 +78,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -70,6 +87,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "shoe_store.wsgi.application"
 
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.facebook.FacebookOAuth2',
+    'social_core.backends.twitter.TwitterOAuth',
+    'social_core.backends.github.GithubOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -116,6 +141,33 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/shop/'
+LOGOUT_REDIRECT_URL = '/'
+
+ACCOUNT_LOGOUT_REDIRECT_URL = '/shop/'
+ACCOUNT_SIGNUP_REDIRECT_URL = '/shop/'
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_SIGNUP_FORM_CLASS = None
+ACCOUNT_USERNAME_REQUIRED = False
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_STORE_TOKENS = True
+SOCIALACCOUNT_ADAPTER = "store.adapters.MySocialAccountAdapter"
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # ใช้ Gmail SMTP
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'noomnavoy@gmail.com'
+EMAIL_HOST_PASSWORD = 'yrnc izwv hmlx rrvw'
+
 STATIC_URL = "static/"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -123,3 +175,53 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SOCIAL_AUTH_FACEBOOK_KEY = '1097416155253969'
+SOCIAL_AUTH_FACEBOOK_SECRET = 'ded4085e81da6d98dd3a50b2721272a2'
+
+STRIPE_TEST_PUBLIC_KEY = 'pk_test_51R1lmzGjdx3kU1kq3jckW2EqInodjRqkSJN6VYgIRq1f1RCUlE80aL1Po4ysnh9tXGRI00IoWROKNUWDg6pTCH0E00nSq2Sjv5'
+STRIPE_TEST_SECRET_KEY = 'sk_test_51R1lmzGjdx3kU1kq8ZXX2TcEPbenND5NMJmB5mLrOUGD2sjlVmMgqYu8qPDwYp4SqRzCI7SmLnzPWwJdF2JFCnGe00Ji3kdoyn'
+STRIPE_WEBHOOK_SECRET = 'whsec_ac2ec975228583fac20b54232f7503fd130b66d2b890971ed81903c77af7501e'
+
+ASGI_APPLICATION = "shoe_store.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+        "CLIENT_ID": "294473073788-c2mt8nooupdbu1nrabhdmcd3n8ouai5t.apps.googleusercontent.com",
+        "SECRET": "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",
+    }
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'allauth': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'store': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

@@ -3,23 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shoe List</title>
+    <title>Shop All</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap');
+        nav {
+            background-color: #151515; /* พื้นหลังสีฟ้า */
+            color: white; /* สีข้อความ */
+            padding: 10px; /* ระยะห่างภายใน */
+        }
+
+        .slides img {
+          width: 100%;
+          height: auto;
+        }
+
+        #mobile-menu {
+            max-height: 0; /* เริ่มต้นซ่อนเมนู */
+            overflow: hidden; /* ป้องกันการแสดงเนื้อหาเมนูเกิน */
+            transition: max-height 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* เอฟเฟกต์นุ่มนวล */
+        }
+
+        #mobile-menu.show {
+            max-height: 500px; /* ปรับความสูงให้พอดีกับเนื้อหา */
+        }
+        .search-bar {
+            width: 100%; /* ให้ช่องค้นหายืดเต็มความกว้าง */
+            max-width: 600px; /* กำหนดความกว้างสูงสุด */
+            margin: auto; /* จัดกลาง */
+            padding: 10px;
+            border-radius: 20px;
+            background-color: #fff; /* กำหนดสีพื้นหลัง */
+            border: 1px solid #ddd; /* ขอบสีเทา */
+            font-size: 16px; /* กำหนดขนาดฟอนต์ */
+            color: #333; /* กำหนดสีตัวอักษรเป็นสีดำ */
+            position: relative; /* เพิ่มเพื่อให้สามารถจัดตำแหน่งของ #search-results ได้ */
+        }
+        #searchInput {
+            color: #000; /* ทำให้ตัวอักษรในช่องค้นหามีสีดำ */
+        }
+        #search-results {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            max-height: 300px; /* กำหนดความสูงของ dropdown */
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            position: absolute;
+            z-index: 1000;
+            top: 100%; /* ให้แสดงอยู่ใต้ช่องค้นหา */
+            left: 21.5%; /* ให้จัดตำแหน่งทางซ้ายสุด */
+            padding: 10px 0;
+            color: #333;
+        }
+        #search-results.show {
+            display: block;
+        }
+
+        /* สไตล์ของแต่ละรายการผลการค้นหา */
+        #search-results div {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        /* เพิ่มสีพื้นหลังเมื่อ hover บนผลการค้นหา */
+        #search-results div:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* สไตล์ของรูปภาพ */
+        #search-results img {
+            width: 60px;
+            height: 40px;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+
+        /* สไตล์ของชื่อสินค้า */
+        #search-results p {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        /* สไตล์ของราคา */
+        #search-results span {
+            font-size: 14px;
+            color: #777;
+            margin-left: auto;
+        }
+        </style>
 </head>
-<body>
-    <h1>Shoe List</h1>
-    <div>
-        {% for shoe in shoes %}
-            <div>
-                <h2>{{ shoe.brand }} - {{ shoe.model }}</h2>
-                <p>Type: {{ shoe.shoe_type }}</p>
-                <p>Gender: {{ shoe.gender }}</p>
-                <p>Size: {{ shoe.size }}</p>
-                <p>Color: {{ shoe.color }}</p>
-                <p>Material: {{ shoe.material }}</p>
-                <p>Price: ${{ shoe.price }}</p>
+<body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav class="p-4 text-white bg-black">
+        <div class="flex items-center justify-between">
+            <!-- Logo -->
+            <a href="{% url 'shop' %}" class="text-4xl font-bold tracking-wider pl-10">Muster</a>
+
+            <!-- Search Bar (อยู่ตรงกลาง) -->
+            <div class="relative w-full md:w-1/2 mx-auto">
+                <input type="text" id="searchInput" name="q" placeholder="Search for shoes..." class="ml-40 text-center search-bar" onkeyup="searchShoes()">
+                <div id="search-results" class="absolute bg-white shadow-lg w-full max-h-60 overflow-y-auto z-10"></div>
             </div>
-            <hr>
-        {% endfor %}
+
+            <!-- Cart Icon (แก้ไขให้ไม่ชิดกันเกินไป) -->
+            <div class="relative flex items-center space-x-16 pr-16">
+                <a href="{% url 'cart' %}" class="relative flex items-center">
+                    🛒 <span class="ml-1">Cart</span>
+                    <span id="cart-count"
+                        class="bg-red-500 text-white text-sm font-bold px-2 py-1 rounded-full absolute -top-2 -right-3 transform translate-x-4">
+                        {{ cart_count }}
+                    </span>
+                </a>
+
+                <a href="{% url 'chat' chat_box_name='general' %}" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-comments"></i> Chat
+                </a>
+
+                <!-- Hamburger Icon for Mobile -->
+                <button onclick="toggleMenu()">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu -->
+        <div class="mt-4 flex justify-center space-x-16 text-lg font-semibold text-white">
+            <a href="{% url 'shoe_all' %}" class="hover:text-gray-400">Shop All</a>
+            <a href="{% url 'shoe_all' %}?category=Running" class="hover:text-gray-400">Running</a>
+            <a href="{% url 'shoe_all' %}?category=Basketball" class="hover:text-gray-400">Basketball</a>
+            <a href="{% url 'shoe_all' %}?category=Casual" class="hover:text-gray-400">Casual</a>
+            <a href="{% url 'shoe_list' %}" class="hover:text-gray-400">More</a>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu (Dropdown Options) -->
+    <div id="mobile-menu" class="hidden bg-gray-800 text-white p-4">
+        <a href="{% url 'profile' %}" class="block py-2 px-4 hover:bg-gray-700">Profile</a>
+        <a href="{% url 'order_history' %}" class="block py-2 px-4 hover:bg-gray-700">Order history</a>
+        <a href="{% url 'your_coupon' %}" class="block py-2 px-4 hover:bg-gray-700 rounded">Your Coupon</a>
+        <a href="{% url 'custom_logout' %}" class="block py-2 px-4 hover:bg-gray-700">Logout</a>
+    </div>
+    <div class="container mx-auto px-4 py-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Shop All Shoes</h1>
+    </div>
+    <div class="container mx-auto px-4 py-6 flex">
+        <!-- Sidebar Filter (Fixed Sticky Sidebar) -->
+        <div class="w-1/4 bg-white p-4 rounded-lg shadow-md h-screen overflow-y-auto sticky top-0">
+            <h2 class="text-xl font-bold mb-4">Filters</h2>
+        <form method="GET" action="{% url 'shoe_all' %}">
+            <!-- Category Filter -->
+            <h3 class="text-lg font-semibold mb-2">Category</h3>
+            {% for category in categories %}
+            <label class="block mb-1">
+                <input type="checkbox" name="category" value="{{ category }}" class="mr-2"
+                       {% if category in selected_categories %} checked {% endif %}>
+                {{ category }}
+            </label>
+            {% endfor %}
+
+            <!-- Brand Filter -->
+            <h3 class="text-lg font-semibold mt-4 mb-2">Brand</h3>
+            {% for brand in brands %}
+            <label class="block mb-1">
+                <input type="checkbox" name="brand" value="{{ brand }}" class="mr-2"
+                       {% if brand in selected_brands %} checked {% endif %}>
+                {{ brand }}
+            </label>
+            {% endfor %}
+
+            <!-- Size Filter -->
+            <h3 class="text-lg font-semibold mt-4 mb-2">Size</h3>
+            <div class="grid grid-cols-3 gap-2">
+                {% for size in sizes %}
+                <label class="flex items-center justify-center border border-gray-400 text-gray-700 rounded-lg p-2 cursor-pointer hover:bg-gray-200">
+                    <input type="checkbox" name="size" value="{{ size }}" class="hidden"
+                           {% if sizes in selected_sizes %} checked {% endif %}>
+                    {{ size }}
+                </label>
+                {% endfor %}
+            </div>
+
+            <!-- Color Filter -->
+            <h3 class="text-lg font-semibold mt-4 mb-2">Color</h3>
+            {% for color in colors %}
+            <label class="block mb-1">
+                <input type="checkbox" name="color" value="{{ color }}" class="mr-2"
+                       {% if color in selected_colors %} checked {% endif %}>
+                {{ color }}
+            </label>
+            {% endfor %}
+
+            <!-- Price Filter -->
+            <h3 class="text-lg font-semibold mt-4 mb-2">Price</h3>
+            {% for price_range in price_ranges %}
+            <label class="block mb-1">
+                <input type="checkbox" name="price_range" value="{{ price_range }}" class="mr-2"
+                       {% if price_range in selected_price_range %} checked {% endif %}>
+                {{ price_range }}
+            </label>
+            {% endfor %}
+
+            <!-- Apply Filter Button -->
+            <button type="button" class="mt-4 w-full bg-red-600 text-white p-2 rounded hover:bg-red-700" onclick="resetFilters()">
+                Reset Filters
+            </button>
+        </form>
+        </div>
+
+        <!-- Product Grid -->
+        <div class="w-3/4 grid grid-cols-3 gap-6 pl-6">
+            {% for shoe in shoes %}
+            <div class="bg-white p-4 rounded-lg shadow-md h-98 flex flex-col justify-between">
+                <!-- รูปภาพ -->
+                <a href="{% url 'shoe_detail' shoe.id %}" class="block">
+                    <img src="{{ shoe.Image }}" alt="{{ shoe.Model }}" class="w-full h-40 object-contain rounded-md">
+                    <!-- ข้อมูลรองเท้า -->
+                    <div class="flex-grow">
+                        <h2 class="text-lg font-bold mt-2">{{ shoe.Brand }} - {{ shoe.Model }}</h2>
+                        <p class="text-sm text-gray-600">{{ shoe.Type }}</p>
+                        <p class="text-sm text-gray-600">Size: {{ shoe.Size }}</p>
+                        <p class="text-sm text-gray-600">Color: {{ shoe.Color }}</p>
+                        <p class="text-sm text-gray-600">Material: {{ shoe.Material }}</p>
+                        <p class="text-lg font-semibold text-blue-600 mt-2">${{ shoe.Price_USD }}</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const filters = document.querySelectorAll("input[type='checkbox']");
+
+    filters.forEach(filter => {
+        filter.addEventListener("change", function () {
+            document.querySelector("form").submit();
+        });
+    });
+});
+function resetFilters() {
+        window.location.href = window.location.pathname; // โหลดหน้าใหม่โดยล้าง query parameters
+    }
+function toggleMenu() {
+            const menu = document.getElementById('mobile-menu');
+
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+                setTimeout(() => {
+                    menu.classList.add('hidden'); // ซ่อนจริงเมื่อ transition จบ
+                }, 600); // ต้องตรงกับเวลาใน CSS transition
+            } else {
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.add('show');
+                }, 10);
+            }
+        }
+
+        function scrollImages(direction) {
+            const container = document.getElementById("imageContainer");
+            const scrollAmount = 800; // Adjust this value to match the width of one group
+            container.scrollBy({
+                left: direction * scrollAmount,
+                behavior: "smooth",
+            });
+        }
+
+        function updateCartCount() {
+            fetch("/cart/count/")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("cart-count").textContent = data.cart_count;
+            })
+            .catch(error => console.error("Error updating cart count:", error));
+        }
+
+        // อัปเดตจำนวนตะกร้าทุกครั้งที่โหลดหน้าเว็บ
+        document.addEventListener("DOMContentLoaded", updateCartCount);
+        //
+
+        function searchShoes() {
+            const query = document.getElementById('searchInput').value;
+            const searchResultsDiv = document.getElementById('search-results');
+
+            // ซ่อน dropdown เมื่อไม่มีการพิมพ์คำค้นหา
+            if (query.length === 0) {
+                searchResultsDiv.classList.remove('show');
+                return;
+            }
+
+            searchResultsDiv.classList.add('show'); // แสดง dropdown เมื่อเริ่มพิมพ์
+
+            // ดึงข้อมูลผลการค้นหาจาก Django
+            fetch(`/search_shoes/?q=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchResultsDiv.innerHTML = '';  // ล้างผลการค้นหาก่อน
+                    data.results.forEach(shoe => {
+                        const resultItem = document.createElement('div');
+                        resultItem.classList.add('p-2', 'cursor-pointer', 'hover:bg-gray-100');
+                        resultItem.innerHTML = `
+                            <div class="flex items-center space-between">
+                                <img src="${shoe.image}" alt="${shoe.model}" class="w-16 h-16 rounded-md">
+                                <p class="text-gray-800 font-medium">${shoe.model}</p>
+                                <span class="text-gray-600">$${shoe.price}</span>
+                            </div>
+                        `;
+
+                        resultItem.onclick = function() {
+                            window.location.href = `/shoe/${shoe.id}/`;  // ไปยังหน้ารายละเอียดสินค้าที่เลือก
+                        };
+
+                        searchResultsDiv.appendChild(resultItem);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+</script>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+<!-- Navbar -->
+<nav class="bg-black text-white p-4 flex justify-between items-center">
+    <a href="{% url 'shop' %}" class="text-2xl font-bold">Muster</a>
+    <a href="{% url 'profile' %}" class="text-gray-300 hover:text-white">Back to Profile</a>
+</nav>
+
+<div class="max-w-4xl mx-auto my-10 p-6 bg-white shadow-lg rounded-lg">
+    <h2 class="text-3xl font-bold text-center text-gray-800">Order Detail</h2>
+
+    <div class="p-5 bg-white border rounded-lg shadow-md mt-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-700">Order ID: #{{ order.id }}</h3>
+            <span class="px-3 py-1 text-sm font-semibold text-white rounded-full
+                {% if order.status == 'pending' %}bg-yellow-500
+                {% elif order.status == 'processing' %}bg-blue-500
+                {% elif order.status == 'shipped' %}bg-purple-500
+                {% elif order.status == 'delivered' %}bg-green-500
+                {% elif order.status == 'cancelled' %}bg-red-500
+                {% endif %}">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+        <p class="text-gray-600 mt-2">Total Price: <strong>${{ order.final_price }}</strong></p>
+        <p class="text-gray-500 text-sm">Placed on: {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+
+        <!-- Shipping Address -->
+        <p class="text-gray-700 font-semibold mt-4">Shipping Address:</p>
+        <p class="text-gray-600">{{ order.shipping_address|default:"Not provided" }}</p>
+
+        <hr class="my-4">
+
+        <!-- Items -->
+        <h4 class="font-semibold text-gray-700">Items:</h4>
+        <ul class="space-y-3 mt-2">
+            {% for item in order_items %}
+            <li class="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
+                <div class="flex items-center">
+                    <img src="{{ item.image|default:'https://via.placeholder.com/100' }}"
+                         alt="{{ item.product_name }}" class="w-24 h-16 rounded-md mr-4">
+                    <span>{{ item.product_name }}</span>
+                </div>
+                <span class="font-semibold"> x {{ item.quantity }} </span>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <hr class="my-4">
+
+        <!-- Payment Information -->
+        <h3 class="text-lg font-bold mt-6">Payment Information:</h3>
+        {% if order.coupon %}
+        <p><strong>Coupon Used:</strong> {{ order.coupon.code }} -
+            {% if order.coupon.discount_type == "percentage" %}
+                {{ order.coupon.discount_value }}% off
+            {% else %}
+                ${{ order.coupon.discount_value }} off
+            {% endif %}
+        </p>
+        {% endif %}
+        <p><strong>Payment Method:</strong>
+            {% if order.payment_method == "cod" %}
+                Cash on Delivery
+            {% elif order.payment_method == "prompt_pay" %}
+                Prompt Pay
+            {% else %}
+                {{ order.payment_method }}
+            {% endif %}
+        </p>
+        <p><strong>Payment Status:</strong>
+            {% if order.payment_status == 'paid' %}
+                <span class="text-green-500">Paid</span>
+            {% else %}
+                <span class="text-yellow-500">Pending</span>
+            {% endif %}
+        </p>
+        {% if order.payment_status == 'paid' %}
+            <p>Payment Date: {{ order.payment_date|date:"F j, Y, g:i a" }}</p>
+        {% endif %}
+
+        <hr class="my-4">
+
+        <!-- ปุ่มลบ Order -->
+        <div class="flex justify-between">
+            <a href="{% url 'order_history' %}" class="text-blue-500 hover:underline">Back to Order History</a>
+            <button id="deleteOrderBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700">
+                Delete Order
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("deleteOrderBtn").addEventListener("click", function() {
+        if (confirm("Are you sure you want to delete this order? This action cannot be undone!")) {
+            fetch("{% url 'delete_order' order.id %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken")
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Order deleted successfully!");
+                    window.location.href = "{% url 'order_history' %}";
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(cookie => {
+                let trimmed = cookie.trim();
+                if (trimmed.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+                }
+            });
+        }
+        return cookieValue;
+    }
+</script>
+
+</body>
+</html>

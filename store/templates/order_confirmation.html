@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-lg mt-10">
+        <h1 class="text-2xl font-bold mb-4">Order Confirmation</h1>
+
+        <h2 class="text-lg font-semibold">Order ID: #{{ order.id }}</h2>
+        <p class="mb-4">Placed on: {{ order.created_at|date:"F j, Y, g:i a" }}</p>
+
+        <p><strong>Shipping Address:</strong> {{ order.shipping_address }}</p>
+        <p><strong>Coupon Used:</strong> {{ order.coupon.code }} - {{ order.coupon.discount_value }}% off</p>
+
+        <p><strong>Payment Method:</strong> {{ order.payment_method }}</p>
+        <p><strong>Payment Status:</strong> {{ order.payment_status }}</p>
+
+        <h3 class="text-lg font-semibold mt-4">Order Items:</h3>
+        <ul>
+            {% for item in order_items %}
+                <li>{{ item.product_name }} - ${{ item.price }} x {{ item.quantity }}</li>
+            {% endfor %}
+        </ul>
+
+        <p class="mt-4 font-bold">Total Price: ${{ order.final_price }}</p>
+
+        <a href="{% url 'order_detail' order.id %}" class="bg-blue-500 text-white text-center p-3 rounded mt-4 hover:bg-blue-600 transition duration-300">
+            View Order Details
+        </a>
+
+        <a href="{% url 'order_history' %}" class="text-blue-500 mt-6 inline-block ml-36 ">Back to Order History</a>
+    </div>
+</body>
+</html>

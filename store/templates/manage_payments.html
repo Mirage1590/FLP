@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Payments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Navbar -->
+    <nav class="bg-black text-white p-4 flex justify-between shadow-lg">
+        <a href="{% url 'admin_dashboard' %}" class="text-2xl font-bold">Muster Admin</a>
+        <a href="{% url 'admin:index' %}" class="text-gray-300 hover:text-white">Django Admin</a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-4 text-gray-900">Payments Management</h1>
+
+        <!-- Payment Summary Section -->
+        <div class="bg-white p-4 mb-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold">Payment Summary</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <p class="text-lg font-medium">Total Revenue Today: <span class="text-blue-500">${{ total_revenue_today }}</span></p>
+                <p class="text-lg font-medium">Total Revenue Last Month: <span class="text-blue-500">${{ total_revenue_last_month }}</span></p>
+                <p class="text-lg font-medium">Total Revenue All Time: <span class="text-blue-500">${{ total_revenue }}</span></p>
+            </div>
+        </div>
+
+        <!-- Payments Table -->
+        <table class="min-w-full bg-white border border-gray-300 rounded-lg shadow-lg text-center mt-4">
+            <thead>
+                <tr class="bg-gray-200 text-gray-700 text-sm">
+                    <th class="p-3">Order ID</th>
+                    <th class="p-3">Total Price</th>
+                    <th class="p-3">Payment Method</th>
+                    <th class="p-3">Payment Status</th>
+                    <th class="p-3">Created At</th>
+                    <th class="p-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td class="p-3">{{ payment.id }}</td>
+                    <td class="p-3">${{ payment.final_price }}</td>
+                    <td class="p-3">{{ payment.payment_method }}</td>
+                    <td class="p-3">
+                        <span class="px-3.5 py-1 rounded text-white
+                            {% if payment.payment_status == 'pending' %} bg-yellow-400
+                            {% elif payment.payment_status == 'paid' %} bg-green-500
+                            {% elif payment.payment_status == 'failed' %} bg-red-500
+                            {% else %} bg-gray-400 {% endif %}">
+                            {{ payment.payment_status }}
+                        </span>
+                    </td>
+                    <td class="p-3">{{ payment.created_at }}</td>
+                    <td class="p-3">
+                        <a href="{% url 'payment_detail' payment.id %}" class="bg-blue-500 text-white px-3 py-1.5 rounded-md">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-3 text-center text-gray-500">No payments found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

@@ -6,6 +6,8 @@
     <title>Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    {% load socialaccount %}
     <style>
         body {
             background: url('/media/start.png') no-repeat center center fixed;
@@ -47,6 +49,15 @@
             width: 40px;
             margin: 0 10px;
         }
+        .text-center i {
+            transition: transform 0.3s ease;
+        }
+        .text-center i:hover {
+            transform: scale(1.2);
+        }
+        #popup-modal.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body class="flex flex-col items-start justify-center h-screen bg-black text-white p-6 ml-56">
@@ -61,17 +72,23 @@
             <input type="password" name="password" placeholder="Password" class="login-input">
             <button type="submit" class="login-button rounded-full">Login</button>
 
-            <div class="text-white text-sm mb-4">
+            <div class="text-white text-sm mb-4 flex flex-col">
                 <a href="{% url 'custom_register' %}" class="hover:underline">register</a>
+                <a href="{% url 'reset_password' %}" class="hover:underline"> Forgot Password? </a>
             </div>
+
         </form>
 
         <!-- ไอคอน Social Login -->
-        <div class="flex justify-center mt-6 social-icons">
-            <a href="#"><img src="/media/facebook.png" alt="Facebook"></a>
-            <a href="#"><img src="/media/line1.png" alt="LINE"></a>
-            <a href="#"><img src="/media/google0.png" alt="Google"></a>
+        <div class="flex justify-center space-x-4">
+            <a href="{% url 'social:begin' 'facebook' %}" class="text-blue-600 text-3xl">
+                <i class="fab fa-facebook"></i>
+            </a>
+            <a href="{% provider_login_url 'google' %}" class="text-red-500 text-3xl">
+                <i class="fab fa-google"></i>
+            </a>
         </div>
     </div>
 </body>
 </html>
+

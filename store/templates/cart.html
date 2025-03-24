@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken"),
+            "Content-Type": "application/json"
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Navbar -->
+    <nav class="bg-black text-white p-4 flex justify-between items-center">
+        <a href="{% url 'shop' %}" class="text-2xl font-bold">Muster</a>
+        <a href="{% url 'shoe_all' %}" class="text-gray-300 hover:text-white">Back to Shop</a>
+    </nav>
+
+    <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🛒 Shopping Cart</h2>
+
+        {% if cart_items %}
+        <div id="cart-items" class="space-y-6">
+            {% for item in cart_items %}
+            <div class="flex items-center bg-gray-100 p-4 rounded-lg shadow-md">
+                <!-- รูปสินค้า -->
+                <img src="{{ item.shoe.image }}" alt="{{ item.shoe.model }}" class="w-24 h-24 object-contain rounded-md">
+
+                <!-- รายละเอียดสินค้า -->
+                <div class="flex-1 ml-6">
+                    <h3 class="text-lg font-semibold text-gray-800">{{ item.shoe.brand }} - {{ item.shoe.model }}</h3>
+                    <p class="text-gray-600">Size: {{ item.shoe.size }}</p>
+                    <p class="text-blue-600 font-semibold text-lg">${{ item.shoe.price }}</p>
+                </div>
+
+                <!-- ปุ่มเพิ่ม/ลดจำนวน -->
+                <div class="flex items-center space-x-3">
+                    <button onclick="updateCart({{ item.id }}, -1)" class="px-3 py-1 bg-gray-300 text-gray-800 rounded-md">−</button>
+                    <span id="quantity-{{ item.id }}" class="px-4 py-1 bg-white border rounded-md text-gray-800">{{ item.quantity }}</span>
+                    <button onclick="updateCart({{ item.id }}, 1)" class="px-3 py-1 bg-gray-300 text-gray-800 rounded-md">+</button>
+                </div>
+
+                <!-- ราคา รวม & ปุ่มลบ -->
+                {% csrf_token %}
+                <div class="text-right ml-6">
+                    <p class="text-gray-700 font-semibold">Total: $<span id="total-price-{{ item.id }}">{{ item.total_price }}</span></p>
+                    <button onclick="removeFromCart({{ item.shoe.id }})" class="bg-red-600 text-white px-4 py-2 mt-2 rounded-md hover:bg-red-700 transition">Remove</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Total Summary -->
+        <div class="mt-6 p-4 bg-gray-200 rounded-lg text-center">
+            <p class="text-xl font-bold text-gray-800">Total: $<span id="cart-total">{{ total_price }}</span></p>
+        </div>
+
+        <!-- ปุ่มล้างตะกร้า และ กลับไปหน้าช็อป -->
+        <div class="flex justify-between mt-6">
+            <a href="{% url 'checkout_view' %}" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-800 transition btn btn-primary">Checkout</a>
+            <button onclick="clearCart()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-800 transition">Clear Cart</button>
+            <a href="{% url 'shop' %}" class="text-blue-600 hover:underline">⬅ Back to Shop</a>
+        </div>
+
+        {% else %}
+        <p class="text-center text-gray-500">Your cart is empty 🛒</p>
+        {% endif %}
+    </div>
+
+    <!-- Checkout Popup -->
+    <div id="checkoutModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 class="text-lg font-bold mb-4">Checkout</h2>
+
+            <label class="block font-semibold">Shipping Address</label>
+            <input type="text" id="shippingAddress" class="w-full p-2 border rounded mb-4" placeholder="Enter your address">
+
+            <label class="block font-semibold">Payment Method</label>
+            <select id="paymentMethod" class="w-full p-2 border rounded mb-4">
+                <option value="credit_card">Credit Card</option>
+                <option value="cash_on_delivery">Cash on Delivery</option>
+                <option value="paypal">PayPal</option>
+            </select>
+
+            <div>
+                <label for="couponSelect">Apply Coupon</label>
+                <select id="couponSelect" class="border p-2">
+                    <option value="">Select a coupon</option>
+                    {% for coupon in coupons %}
+                        <option value="{{ coupon.coupon.code }}">{{ coupon.coupon.code }} - ${{ coupon.coupon.discount_value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <p class="text-xl font-bold text-gray-800">
+                Total: <span id="final-price">${{ final_price }}</span>
+            </p>
+
+
+            <div class="flex justify-end space-x-2 mt-4">
+                <button onclick="confirmCheckout()" class="bg-blue-600 text-white px-4 py-2 rounded">Confirm</button>
+                <button onclick="closeCheckout()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <script>
+        function updateCart(cartId, change) {
+            let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            console.log("📌 Updating cart ID:", cartId, "Change:", change);  // ✅ Debug
+
+            fetch(`/cart/update/${cartId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ "quantity": change })
+            })
+            .then(response => {
+                console.log("📌 Raw response:", response);
+                return response.json();
+            })
+            .then(data => {
+                console.log("📌 Response from server:", data);
+                if (data.status === "success") {
+                    document.getElementById(`quantity-${cartId}`).innerText = data.new_quantity;
+                    document.getElementById(`total-price-${cartId}`).innerText = data.new_total_price;
+                    document.getElementById("cart-total").innerText = data.cart_total;
+                } else {
+                    alert("❌ Error updating cart: " + data.message);
+                }
+            })
+            .catch(error => console.error("❌ Fetch Error:", error));
+        }
+        function removeFromCart(shoeId) {
+            fetch(`/cart/remove/${shoeId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    location.reload();  // รีโหลดหน้าตะกร้าเมื่อทำการลบสำเร็จ
+                } else {
+                    alert("Failed to remove item");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        function clearCart() {
+            fetch(`/cart/clear/`, { method: "POST", headers: { "X-CSRFToken": "{{ csrf_token }}" } })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        document.getElementById("checkoutBtn").addEventListener("click", function() {
+            console.log("Checkout button clicked!"); // ตรวจสอบว่าปุ่มทำงาน
+
+            fetch("/create-order/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCookie("csrftoken"),
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Response:", data);
+                if (data.success) {
+                    alert("Order created successfully!");
+                    window.location.href = "/orders/";
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+        function openCheckout() {
+            document.getElementById("checkoutModal").classList.remove("hidden");
+        }
+
+        function closeCheckout() {
+            document.getElementById("checkoutModal").classList.add("hidden");
+        }
+
+        function confirmCheckout() {
+            let shippingAddress = document.getElementById("shippingAddress").value;
+            let paymentMethod = document.getElementById("paymentMethod").value;
+            let couponSelect = document.getElementById("couponSelect");
+            let couponCode = couponSelect.options[couponSelect.selectedIndex].value;
+            let finalPrice = document.getElementById("final-price").innerText.replace("$", "");
+
+            let payload = {
+                shipping_address: shippingAddress,
+                payment_method: paymentMethod,
+                coupon_code: couponCode,
+                final_price: finalPrice
+            };
+
+            fetch("/create-order/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken"),
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Order created successfully!");
+                    window.location.href = `/order/${data.order_id}/`;
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        document.getElementById("confirm-button").addEventListener("click", function() {
+            let finalPrice = this.getAttribute("data-final-price") || "{{ total_price }}";  // ใช้ราคาปัจจุบันถ้าไม่มีคูปอง
+            document.getElementById("final-price-input").value = finalPrice;
+            document.getElementById("checkout-form").submit();
+        });
+
+        document.getElementById("couponSelect").addEventListener("change", function() {
+            let couponCode = this.value;
+            if (!couponCode) return;
+
+            fetch("/apply-coupon/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({ coupon_code: couponCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let newTotal = parseFloat(data.final_price);
+                    document.getElementById("final-price").innerText = `$${newTotal.toFixed(2)}`;
+                    document.getElementById("confirm-button").setAttribute("data-final-price", newTotal);
+                } else {
+                    alert("Error: " + data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+
+
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let couponSelect = document.getElementById("couponSelect");
+            let finalPriceElement = document.getElementById("final-price");
+            let confirmButton = document.getElementById("confirm-button");
+
+            // ดึงราคาตั้งต้นจาก HTML
+            let originalPrice = parseFloat(finalPriceElement.innerText.replace("$", "")) || 0;
+
+            couponSelect.addEventListener("change", function () {
+                let selectedCoupon = couponSelect.value;
+
+                if (!selectedCoupon) {
+                    finalPriceElement.innerText = `$${originalPrice.toFixed(2)}`;
+                    confirmButton.dataset.finalPrice = originalPrice.toFixed(2);
+                    return;
+                }
+
+                fetch("/apply-coupon/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify({ coupon_code: selectedCoupon })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        let newTotal = parseFloat(data.final_price);
+                        finalPriceElement.innerText = `$${newTotal.toFixed(2)}`;
+                        confirmButton.setAttribute("data-final-price", newTotal);
+                    } else {
+                        alert("Error: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+
+            confirmButton.addEventListener("click", function () {
+                let finalPrice = confirmButton.getAttribute("data-final-price") || originalPrice.toFixed(2);
+                let shippingAddress = document.getElementById("shippingAddress").value;
+                let paymentMethod = document.getElementById("paymentMethod").value;
+
+                fetch("/create-order/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    body: JSON.stringify({
+                        shipping_address: shippingAddress,
+                        payment_method: paymentMethod,
+                        coupon_code: couponSelect.value,
+                        final_price: finalPrice
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Order placed successfully!");
+                        window.location.href = `/order/${data.order_id}/`;
+                    } else {
+                        alert("Error: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+
+        window.onload = function() {
+            document.getElementById("applyCouponBtn").addEventListener("click", function() {
+                var couponCode = document.getElementById("couponInput").value;
+                if (couponCode) {
+                    alert("Coupon code: " + couponCode);
+                } else {
+                    alert("Please enter a coupon code.");
+                }
+            });
+        };
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                document.cookie.split(';').forEach(cookie => {
+                    let trimmed = cookie.trim();
+                    if (trimmed.startsWith(name + '=')) {
+                        cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+                    }
+                });
+            }
+            return cookieValue;
+        }
+    </script>
+
+</body>
+</html>

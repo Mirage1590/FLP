@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupon Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Navbar -->
+    <nav class="bg-black text-white p-4 flex justify-between">
+        <a href="{% url 'admin_dashboard' %}" class="text-2xl font-bold">Muster Admin</a>
+        <a href="{% url 'admin:index' %}" class="text-gray-300 hover:text-white">Django Admin</a>
+    </nav>
+
+    <div class="max-w-4xl mx-auto bg-white shadow-md rounded-lg p-6 mt-20">
+        <h1 class="text-2xl font-bold mb-4 text-gray-700">Coupon Management</h1>
+
+        <div class="flex justify-end mb-4">
+            <a href="{% url 'add_coupon' %}" class="bg-green-500 text-white px-4 py-2 rounded-md">+ Add Coupon</a>
+        </div>
+
+        <table class="w-full border-collapse bg-white shadow-md rounded-lg">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="p-3">Code</th>
+                    <th class="p-3">Type</th>
+                    <th class="p-3">Value</th>
+                    <th class="p-3">Expiry</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for coupon in coupons %}
+                <tr class="border-t text-center">
+                    <td class="p-3">{{ coupon.code }}</td>
+                    <td class="p-3">{{ coupon.get_discount_type_display }}</td>
+                    <td class="p-3">
+                        {% if coupon.discount_type == "percentage" %}
+                            {{ coupon.discount_value }}%
+                        {% else %}
+                            ${{ coupon.discount_value }}
+                        {% endif %}
+                    </td>
+                    <td class="p-3">{{ coupon.expiry_date }}</td>
+                    <td>
+                        {% if coupon.status == "active" %}
+                            <span class="text-green-500">Active</span>
+                        {% else %}
+                            <span class="text-red-500">Expired</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 flex space-x-2 ml-4">
+                        <a href="{% url 'edit_coupon' coupon.id %}" class="bg-blue-500 text-white px-3 py-1 rounded">Edit</a>
+                        <a href="{% url 'delete_coupon' coupon.id %}" class="bg-red-500 text-white px-3 py-1 rounded" onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-4 text-center text-gray-500">No coupons available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

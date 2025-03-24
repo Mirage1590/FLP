@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Role</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="bg-black text-white p-4 flex justify-between">
+        <a href="{% url 'admin_dashboard' %}" class="text-2xl font-bold">Muster Admin</a>
+        <a href="{% url 'admin:index' %}" class="text-gray-300 hover:text-white">Django Admin</a>
+    </nav>
+
+    <div class="container mx-auto mt-6">
+        <h2 class="text-2xl font-semibold mb-4">Assign Role to User: {{ user.username }}</h2>
+        <form method="POST" class="bg-white p-6 shadow-md rounded-lg">
+            {% csrf_token %}
+            <label for="role" class="block mb-2">Role:</label>
+            <select name="role" class="w-full p-2 border rounded mb-4">
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+            </select>
+
+            <button type="submit" class="bg-blue-500 text-white p-2 rounded-lg w-full">Assign Role</button>
+        </form>
+    </div>
+</body>
+</html>
