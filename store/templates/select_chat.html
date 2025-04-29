@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-lg">
+        <h2 class="text-2xl font-bold mb-6 text-center">Start a Chat</h2>
+
+        <!-- ปุ่มแชทกับแอดมิน -->
+        {% if admin_user %}
+        <div class="flex flex-col space-y-4 mb-8">
+            <a href="{% url 'chat' 'admin_'|add:request.user.username %}"
+               class="block text-center py-3 rounded-lg bg-black text-white hover:bg-gray-800">
+                Chat with Admin
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- รายชื่อ Users (แยกห้องตาม user) -->
+        <h3 class="text-lg font-semibold mb-4 text-gray-700">Or chat with users:</h3>
+        <div class="grid grid-cols-1 gap-4">
+            {% for user in users %}
+                {% if user.id and request.user.id %}
+                    {% if user.id != request.user.id %}
+                        <a href="{% url 'chat_with_user' user.id %}"
+                           class="block border border-gray-300 p-3 rounded-lg hover:bg-gray-100">
+                            {{ user.username }}
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% empty %}
+                <p class="text-gray-500">No other users available.</p>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{% url 'shop' %}" class="text-gray-600 hover:underline">⬅ Back to Shop</a>
+        </div>
+    </div>
+</body>
+</html>

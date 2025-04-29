@@ -33,7 +33,8 @@
                     <p class="text-gray-700"><strong>Color:</strong> {{ shoe.color }}</p>
                     <p class="text-gray-700"><strong>Material:</strong> {{ shoe.material }}</p>
                     <p class="text-gray-700"><strong>Gender:</strong> {{ shoe.gender }}</p>
-                    <p class="text-gray-700"><strong>Price:</strong> <span class="text-blue-600 text-xl">${{ shoe.price }}</span></p>
+                    <p class="text-gray-700"><strong>Price:</strong> <span class="text-blue-500" id="price-{{ shoe.id }}">${{ shoe.price|floatformat:2 }}</span>
+                    <button onclick="switchCurrency('USD')" class="text-gary ml-8">USD ($)</button> , <button onclick="switchCurrency('THB')" class="text-gray">THB (฿)</button>
                 </div>
 
                 <!-- Buttons -->
@@ -77,6 +78,7 @@
         </div>
 
         <!-- Review Form -->
+        {% if has_purchased %}
         <form method="post" class="bg-white p-6 rounded-lg shadow-lg space-y-6">
             {% csrf_token %}
 
@@ -119,6 +121,9 @@
                 <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-md hover:bg-blue-700 focus:outline-none transition duration-200">Submit Review</button>
             </div>
         </form>
+        {% else %}
+            <p class="text-gray-500 text-center font-semibold mt-4">You must purchase this product to leave a review.</p>
+        {% endif %}
     </div>
 
     <!-- Related Shoes Section -->
@@ -143,7 +148,6 @@
     </div>
 
     <script>
-
         document.addEventListener("DOMContentLoaded", function () {
             let likeBtn = document.getElementById("likeBtn");
             let shoeId = likeBtn.getAttribute("data-shoe-id");
@@ -261,6 +265,24 @@
                 }
             });
         });
+
+        function switchCurrency(currency) {
+    // เก็บสกุลเงินไว้ใน localStorage
+    localStorage.setItem("currency", currency);
+
+    fetch(`/convert_currency/?currency=${currency}`)
+        .then(response => response.json())
+        .then(data => {
+            data.shoes.forEach(shoe => {
+                const priceElement = document.querySelector(`#price-${shoe.id}`);
+                if (priceElement) {
+                    let priceText = currency === 'THB' ? `฿${shoe.price.toFixed(2)}` : `$${shoe.price.toFixed(2)}`;
+                    priceElement.textContent = priceText;
+                }
+            });
+        })
+        .catch(error => console.error("Currency switch error:", error));
+}
     </script>
 
 </body>

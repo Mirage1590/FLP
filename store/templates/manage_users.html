@@ -56,7 +56,7 @@
         const confirmation = confirm("Are you sure you want to delete this user? This action cannot be undone.");
         if (confirmation) {
             // Redirect to the delete URL if the user confirms
-            window.location.href = `/delete_user/${userId}/`;  // URL of delete_user_view
+            window.location.href = `/admin_users_delete/${userId}/`;  // URL of delete_user_view
         }
     }
 </script>

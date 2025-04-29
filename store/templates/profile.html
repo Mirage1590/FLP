@@ -67,7 +67,7 @@
             <ul class="space-y-2" id="activityHistory">
                 {% for order in orders %}
                 <li class="p-3 bg-gray-200 rounded flex justify-between">
-                    <span>Order ID: <strong>#{{ order.id }}</strong> - Total: <strong>${{ order.final_price|floatformat:2 }}</strong> - Status:
+                    <span>Order ID: <strong>#{{ order.id }}</strong> - Total: <strong>${{ order.final_price|floatformat:2 }}<span class="text-sm text-gray-500">(฿{{ order.price_thb }})</span></strong> - Status:
                         <span class="font-semibold {% if order.status == 'pending' %}text-yellow-600{% elif order.status == 'processing' %}text-blue-600{% elif order.status == 'shipped' %}text-purple-600{% elif order.status == 'delivered' %}text-green-600{% elif order.status == 'cancelled' %}text-red-600{% endif %}">
                             {{ order.get_status_display }}
                         </span>

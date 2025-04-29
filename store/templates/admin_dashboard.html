@@ -9,9 +9,14 @@
 <body class="bg-gray-100 font-sans">
     <div class="min-h-screen flex flex-col">
         <!-- Navbar -->
-        <nav class="bg-black p-4 text-white flex justify-between">
+        <nav class="bg-black p-4 text-white flex justify-between items-center">
             <h1 class="text-xl font-bold">Admin Dashboard</h1>
-            <a href="/logout" class="hover:underline">Logout</a>
+
+            <!-- กลุ่มลิงก์ขวา -->
+            <div class="flex space-x-6 items-center ml-auto">
+                <a href="{% url 'select_chat_admin' %}" class="hover:underline"><i class="fas fa-comments"></i> Chat</a>
+                <a href="/logout" class="hover:underline">Logout</a>
+            </div>
         </nav>
 
         <!-- Dashboard Content -->

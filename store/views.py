@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from .models import Profile, Shoe,ShoeLike,Cart,Order, OrderItem,Coupon,UserCoupon,ChatRoom,ChatMessage,Review
+from .models import Profile, Shoe,ShoeLike,Cart,Order, OrderItem,Coupon,UserCoupon,ChatRoom,Review
 from .forms import ProfileForm,ReviewForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
@@ -20,6 +20,7 @@ from datetime import datetime
 from django.utils import timezone
 from django.db.models import Sum,Avg
 import stripe
+
 
 like_data = {}
 cart_items = []
@@ -113,6 +114,10 @@ def profile(request):
     # ดึงคำสั่งซื้อของผู้ใช้ที่ล็อกอิน
     orders = Order.objects.filter(user=request.user).order_by('-created_at')  # เรียงจากใหม่ไปเก่า
 
+    exchange_rate = 30
+    for order in orders:
+        order.price_thb = round(order.final_price * exchange_rate, 2)
+
     # ตรวจสอบโปรไฟล์ภาพ
     profile_picture_url = profile.profile_picture.url if profile and profile.profile_picture else 'https://via.placeholder.com/100'
 
@@ -179,33 +184,6 @@ def delete_account(request):
         return JsonResponse({"success": True, "message": "Your account has been deleted."})
 
     return JsonResponse({"success": False, "error": "Invalid request method."})
-
-def shoe_list(request):
-        # ดึงค่าจาก GET Request (query parameters) ที่ใช้สำหรับกรองข้อมูล
-        brand = request.GET.get('brand')
-        shoe_type = request.GET.get('shoe_type')
-        min_price = request.GET.get('min_price')
-        max_price = request.GET.get('max_price')
-
-        # ดึงข้อมูลทั้งหมดก่อน จากนั้นกรองตามเงื่อนไข
-        shoes = Shoe.objects.all()
-
-        # กรองตามแบรนด์
-        if brand:
-            shoes = shoes.filter(brand=brand)
-
-        # กรองตามประเภท
-        if shoe_type:
-            shoes = shoes.filter(shoe_type=shoe_type)
-
-        # กรองตามช่วงราคา
-        if min_price:
-            shoes = shoes.filter(price__gte=min_price)
-        if max_price:
-            shoes = shoes.filter(price__lte=max_price)
-
-        # ส่งข้อมูลไปยัง template
-        return render(request, 'shoe_list.html', {'shoes': shoes})
 
 def shoe_all(request):
     # โหลดข้อมูลจากไฟล์ Excel
@@ -304,13 +282,21 @@ def shoe_all(request):
 def shoe_detail(request, shoe_id):
     shoe = get_object_or_404(Shoe, id=shoe_id)
     reviews = Review.objects.filter(product=shoe).order_by('-created_at')
-
     # สร้างสินค้าที่เกี่ยวข้อง (ตัวอย่าง: เอาสินค้ารุ่นเดียวกัน แต่คนละสี)
     related_shoes = Shoe.objects.filter(brand=shoe.brand).exclude(id=shoe.id)[:5]
     is_liked = ShoeLike.objects.filter(user=request.user, shoe=shoe).exists()
     avg_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    has_purchased = OrderItem.objects.filter(
+        order__user=request.user,
+        order__payment_status="paid",
+        shoe=shoe
+    ).exists()
 
-    if request.method == "POST":
+    print("🧪 Current user:", request.user.username)
+    print("🧪 Checking purchase for shoe:", shoe.model)
+    print("✅ has_purchased:", has_purchased)
+
+    if request.method == "POST" and has_purchased:
         form = ReviewForm(request.POST)
         if form.is_valid():
             review = form.save(commit=False)
@@ -327,7 +313,8 @@ def shoe_detail(request, shoe_id):
         'is_liked': is_liked,
         'reviews': reviews,
         'avg_rating': avg_rating,
-        'form': form
+        'form': form,
+        "has_purchased": has_purchased,
     })
 
 def load_more_shoes(request):
@@ -429,8 +416,8 @@ def update_cart(request, cart_id):
         return JsonResponse({
             "status": "success",
             "new_quantity": cart.quantity,
-            "new_total_price": new_total_price,
-            "cart_total": cart_total
+            "new_total_price": float(new_total_price),  # ไม่แปลง currency ที่นี่
+            "cart_total": float(cart_total)
         })
 
     except Exception as e:
@@ -521,17 +508,30 @@ def create_order(request):
 
 @login_required
 def order_history(request):
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    exchange_rate = 30  # USD → THB
+
+    orders = Order.objects.filter(user=request.user).prefetch_related("items").order_by("-created_at")
+
+    for order in orders:
+        order.price_thb = round(order.final_price * exchange_rate, 2)
+        for item in order.items.all():
+            item.price_thb = round(item.price * exchange_rate, 2)  # ✅ ต้องตั้งค่า price_thb สำหรับแต่ละ item
+
     return render(request, "order_history.html", {"orders": orders})
+
 
 def order_detail_view(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     order_items = OrderItem.objects.filter(order=order)  # ดึงรายการสินค้าในคำสั่งซื้อ
 
+    exchange_rate = 30
+    total_price_thb = order.total_price * exchange_rate
+
     # สร้าง context ให้ส่งไปยัง template
     context = {
         'order': order,
         'order_items': order_items,  # ส่งรายการสินค้า
+        'total_price_thb': total_price_thb
     }
     return render(request, 'order_detail.html', context)
 
@@ -611,6 +611,7 @@ def checkout_view(request):
             for cart_item in cart_items:
                 OrderItem.objects.create(
                     order=order,  # Link the order with the OrderItem
+                    shoe=cart_item.shoe,
                     product_name=cart_item.shoe.model,
                     quantity=cart_item.quantity,
                     price=cart_item.price,
@@ -647,6 +648,7 @@ def checkout_view(request):
             for cart_item in cart_items:
                 OrderItem.objects.create(
                     order=order,
+                    shoe=cart_item.shoe,
                     product_name=cart_item.shoe.model,
                     quantity=cart_item.quantity,
                     price=cart_item.price,
@@ -670,6 +672,9 @@ def order_confirmation(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     order_items = OrderItem.objects.filter(order=order)
 
+    exchange_rate = 30
+    total_price_thb = order.total_price * exchange_rate
+
     # ปรับสถานะการชำระเงิน
     if order.payment_status == "pending":
         if order.payment_method == "cod":
@@ -684,7 +689,8 @@ def order_confirmation(request, order_id):
 
     context = {
         'order': order,
-        'order_items': order_items
+        'order_items': order_items,
+        'total_price_thb': total_price_thb,
     }
 
     return render(request, 'order_confirmation.html', context)
@@ -740,6 +746,9 @@ def available_coupons_view(request):
     available_coupons = Coupon.objects.filter(status='active', expiry_date__gte=now())
     saved_coupon_ids = UserCoupon.objects.filter(user=request.user, saved=True).values_list('coupon__id', flat=True)
 
+    for coupon in available_coupons:
+        coupon.update_status()
+
     context = {
         'available_coupons': available_coupons,
         'saved_coupon_ids': saved_coupon_ids,  # คูปองที่ผู้ใช้บันทึกแล้ว
@@ -770,8 +779,10 @@ def save_coupon(request, coupon_id):
     return JsonResponse({'success': False, 'error': 'Invalid coupon.'})
 
 def your_coupons_view(request):
-    # ดึงคูปองที่ผู้ใช้บันทึกไว้แล้ว
-    user_coupons = UserCoupon.objects.filter(user=request.user, saved=True)
+    user_coupons = UserCoupon.objects.filter(user=request.user, saved=True).select_related('coupon')
+
+    for uc in user_coupons:
+        uc.coupon.update_status()  # 🔁 เช็คและอัปเดตสถานะให้แต่ละคูปอง
 
     context = {
         'user_coupons': user_coupons
@@ -831,22 +842,6 @@ def save_coupon(request, coupon_id):
 
     return JsonResponse({'success': False})
 
-
-@login_required
-def coupon_points_view(request):
-    available_coupons = Coupon.objects.all()  # All available coupons
-    user_coupons = UserCoupon.objects.filter(user=request.user)  # Coupons saved by the current user
-
-    # Prepare a list of coupon IDs that the user has saved
-    saved_coupon_ids = user_coupons.values_list('coupon_id', flat=True)
-
-    context = {
-        'available_coupons': available_coupons,
-        'user_coupons': user_coupons,
-        'saved_coupon_ids': saved_coupon_ids,  # Passing saved coupon IDs to the template
-    }
-    return render(request, 'available_coupons.html', context)
-
 def admin_required(user):
     return user.is_superuser
 
@@ -876,12 +871,16 @@ def admin_coupons_view(request):
         coupon_id = request.POST.get("coupon_id")
         try:
             coupon = Coupon.objects.get(id=coupon_id)
-            coupon.mark_as_used()  # ใช้ฟังก์ชัน mark_as_used
-            return redirect('coupon_management')  # เปลี่ยนเส้นทางไปหน้าจัดการคูปอง
+            coupon.mark_as_used()
+            return redirect('coupon_management')
         except Coupon.DoesNotExist:
             return HttpResponse("Coupon not found")
 
-    coupons = Coupon.objects.all()  # ดึงข้อมูลคูปองทั้งหมด
+    # ✅ ตรวจสอบสถานะทุกคูปองก่อนแสดงผล
+    coupons = Coupon.objects.all()
+    for coupon in coupons:
+        coupon.update_status()
+
     return render(request, 'admin_coupons.html', {'coupons': coupons})
 
 
@@ -1119,15 +1118,60 @@ def payment_detail(request, payment_id):
 def chat_box(request, chat_box_name):
     return render(request, "chat_room.html", {"chat_box_name": chat_box_name})
 
-def chat_room(request, chat_box_name):
-    room, created = ChatRoom.objects.get_or_create(name=chat_box_name)
-    messages = ChatMessage.objects.filter(room=room).order_by("timestamp")
+def select_chat_view(request):
+    # แยก admin ออก
+    admin_user = User.objects.filter(is_superuser=True).first()
+    # ผู้ใช้ทั่วไป (ไม่รวมตัวเองและไม่รวม superuser)
+    users = User.objects.exclude(id__isnull=True).exclude(id=request.user.id).filter(is_superuser=False)
 
-    return render(request, "chat_room.html", {
-        "chat_box_name": chat_box_name,
-        "messages": messages,
+    return render(request, 'select_chat.html', {
+        'admin_user': admin_user,
+        'users': users
     })
 
+@login_required
+def chat_with_user_view(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+
+    if target_user == request.user:
+        return redirect('select_chat')
+
+    user_ids = sorted([request.user.id, target_user.id])
+    chat_box_name = f"Chat_{user_ids[0]}_{user_ids[1]}"
+
+    room = ChatRoom.objects.filter(name=chat_box_name).first()
+
+    if not room:
+        room = ChatRoom.objects.create(name=chat_box_name)
+        room.users.add(request.user)
+        room.users.add(target_user)
+
+    return redirect('chat', chat_box_name=room.name)
+
+@user_passes_test(lambda u: u.is_superuser)
+def select_chat_admin(request):
+    users = User.objects.filter(is_superuser=False)
+    return render(request, 'select_chat_admin.html', {'users': users})
+
+@login_required
+def chat_with_admin_view(request):
+    admin_user = User.objects.filter(is_superuser=True).first()
+    if not admin_user:
+        return HttpResponse("Admin not found")
+
+    # ห้องแยกตาม user
+    chat_box_name = f"chat_with_admin_{request.user.id}"
+
+    # หา หรือ สร้างห้องใหม่
+    room, created = ChatRoom.objects.get_or_create(name=chat_box_name)
+
+    # เพิ่มสมาชิกในห้อง (admin กับ user นี้)
+    if created or not room.users.filter(id=request.user.id).exists():
+        room.users.add(request.user)
+    if not room.users.filter(id=admin_user.id).exists():
+        room.users.add(admin_user)
+
+    return redirect('chat', chat_box_name=room.name)
 
 def search_shoes(request):
     query = request.GET.get('q', '')
@@ -1144,3 +1188,21 @@ def search_shoes(request):
             })
 
     return JsonResponse({'results': results})
+
+def convert_currency(request):
+    currency = request.GET.get("currency", "USD")
+    exchange_rate = 30  # สมมุติอัตรา USD → THB
+    shoes = Shoe.objects.all()
+
+    data = []
+    for shoe in shoes:
+        price = float(shoe.price)
+        converted_price = round(price * exchange_rate, 2) if currency == "THB" else price
+        data.append({
+            "id": shoe.id,
+            "model": shoe.model,
+            "price": converted_price,
+            "currency": currency,
+        })
+
+    return JsonResponse({"shoes": data})

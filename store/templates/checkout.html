@@ -32,6 +32,14 @@
                 {% endfor %}
             </select>
 
+            <div class="mb-4">
+              <label class="block text-black-700 font-semibold mb-1">Currency:</label>
+              <select id="currencySelect" onchange="updateCurrency()" class="w-full p-2 border rounded">
+                <option value="USD">$ USD</option>
+                <option value="THB">฿ THB</option>
+              </select>
+            </div>
+
             <p class="font-bold text-lg mt-4">
                 Total Price: <span id="total_price" data-original-price="{{ total_price }}">$ {{ final_price }}</span>
             </p>
@@ -49,30 +57,46 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            let couponSelect = document.querySelector("select[name='coupon_code']");
-            let totalPriceElement = document.getElementById("total_price");
-            let originalPrice = parseFloat(totalPriceElement.getAttribute("data-original-price"));
+            const couponSelect = document.querySelector("select[name='coupon_code']");
+            const totalPriceElement = document.getElementById("total_price");
+            const currencySelect = document.getElementById("currencySelect");
 
-            function updatePrice() {
-                let selectedOption = couponSelect.options[couponSelect.selectedIndex];
-                let discountValue = parseFloat(selectedOption.getAttribute("data-discount")) || 0;
-                let discountType = selectedOption.getAttribute("data-discount-type");
+            const originalPriceUSD = parseFloat(totalPriceElement.getAttribute("data-original-price")) || 0;
 
-                let finalPrice;
+            function calculateFinalPrice() {
+                const selectedOption = couponSelect.options[couponSelect.selectedIndex];
+                const discountValue = parseFloat(selectedOption.getAttribute("data-discount")) || 0;
+                const discountType = selectedOption.getAttribute("data-discount-type");
+
+                let finalPrice = originalPriceUSD;
+
                 if (discountType === "percentage") {
-                    finalPrice = originalPrice - (originalPrice * (discountValue / 100)); // Apply percentage discount
-                } else {
-                    finalPrice = originalPrice - discountValue; // Apply fixed amount discount
+                    finalPrice -= (originalPriceUSD * discountValue / 100);
+                } else if (discountType === "fixed") {
+                    finalPrice -= discountValue;
                 }
 
-                if (isNaN(finalPrice) || finalPrice < 0) {
-                    finalPrice = 0;
-                }
-
-                totalPriceElement.textContent = `$${finalPrice.toFixed(2)}`;
+                if (finalPrice < 0) finalPrice = 0;
+                return finalPrice;
             }
 
-            couponSelect.addEventListener("change", updatePrice);
+            function updateDisplayPrice() {
+                const selectedCurrency = currencySelect.value;
+                const rate = selectedCurrency === "THB" ? 30 : 1;
+                const symbol = selectedCurrency === "THB" ? "฿" : "$";
+
+                const finalPriceUSD = calculateFinalPrice();
+                const finalConverted = finalPriceUSD * rate;
+
+                totalPriceElement.textContent = `${symbol}${finalConverted.toFixed(2)}`;
+            }
+
+            // Trigger update when coupon or currency is changed
+            couponSelect.addEventListener("change", updateDisplayPrice);
+            currencySelect.addEventListener("change", updateDisplayPrice);
+
+            // Call once on load
+            updateDisplayPrice();
         });
     </script>
 

@@ -150,7 +150,7 @@
                     </span>
                 </a>
 
-                <a href="{% url 'chat' chat_box_name='general' %}" class="text-gray-300 hover:text-white">
+                <a href="{% url 'select_chat' %}" class="text-gray-300 hover:text-white">
                     <i class="fas fa-comments"></i> Chat
                 </a>
 
@@ -171,7 +171,6 @@
             <a href="{% url 'shoe_all' %}?category=Running" class="hover:text-gray-400">Running</a>
             <a href="{% url 'shoe_all' %}?category=Basketball" class="hover:text-gray-400">Basketball</a>
             <a href="{% url 'shoe_all' %}?category=Casual" class="hover:text-gray-400">Casual</a>
-            <a href="{% url 'shoe_list' %}" class="hover:text-gray-400">More</a>
         </div>
     </nav>
 
@@ -237,6 +236,10 @@
     <!-- Products -->
     <section class="p-6 bg-white">
         <h2 class="text-center text-2xl font-bold mb-4">Retail and Below Retail Price</h2>
+        <div class="text-center mb-4 mr-4">
+            <button onclick="switchCurrency('USD')" class="px-3 py-1 bg-black text-white rounded">USD ($)</button>
+            <button onclick="switchCurrency('THB')" class="px-3 py-1 bg-black text-white rounded">THB (฿)</button>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {% for shoe in shoes %}
             <div class="bg-white p-4 shadow-md">
@@ -244,7 +247,7 @@
                     <img src="{{ shoe.image }}" class="w-full h-auto">
                     <p class="mt-2 font-bold">{{ shoe.model }}</p>
                     <p class="text-sm text-gray-600">{{ shoe.shoe_type }}</p>
-                    <p class="text-red-500">${{ shoe.price|floatformat:2 }}</p>
+                    <p class="text-red-500" id="price-{{ shoe.id }}">${{ shoe.price|floatformat:2 }}</p>
                 </a>
             </div>
             {% endfor %}
@@ -502,6 +505,25 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
+
+        function switchCurrency(currency) {
+            fetch(`/convert_currency/?currency=${currency}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.shoes.forEach(shoe => {
+                        const priceTag = document.querySelector(`#price-${shoe.id}`);
+                        if (priceTag) {
+                            if (shoe.currency === "THB") {
+                                priceTag.textContent = `฿${shoe.price.toFixed(2)}`;
+                            } else {
+                                priceTag.textContent = `$${shoe.price.toFixed(2)}`;
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error("Currency switch error:", error));
+        }
+
     </script>
 
 

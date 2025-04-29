@@ -26,7 +26,11 @@
             {% endfor %}
         </ul>
 
-        <p class="mt-4 font-bold">Total Price: ${{ order.final_price }}</p>
+        <p class="mt-4 font-bold">Total Price: ${{ order.final_price }}
+            <span style="color: #666; font-size: 0.9em;">
+                (฿{{ total_price_thb|floatformat:2 }})
+            </span>
+        </p>
 
         <a href="{% url 'order_detail' order.id %}" class="bg-blue-500 text-white text-center p-3 rounded mt-4 hover:bg-blue-600 transition duration-300">
             View Order Details

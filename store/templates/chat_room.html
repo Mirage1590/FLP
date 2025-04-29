@@ -6,117 +6,134 @@
     <title>Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-white flex items-center justify-center h-screen">
-    <div class="w-full max-w-lg p-6 bg-gray-100 rounded-lg shadow-xl">
+<body class="bg-white flex items-center justify-center min-h-screen">
 
-        <!-- ปุ่มกลับไปหน้ารองเท้า -->
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">💬 Chatbox</h2>
-            <a href="{% url 'shop' %}"
-               class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition duration-200"
-            >⬅ Back to Shoes</a>
-        </div>
+<div class="w-full max-w-lg p-6 bg-gray-100 rounded-lg shadow-xl relative">
 
-        <!-- กล่องแสดงข้อความ -->
-        <div id="chat-log" class="mb-4 p-4 bg-white rounded-lg shadow-inner overflow-y-auto max-h-96 space-y-2" style="height: 400px;"></div>
+    <!-- หัวข้อ Chatbox และปุ่มกลับ -->
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">💬 {{ chat_box_name|capfirst }}</h2>
 
-        <!-- กำลังพิมพ์ -->
-        <p id="typing-indicator" class="text-gray-500 text-sm hidden">...</p>
-
-        <!-- ช่องกรอกข้อความ -->
-        <div class="flex mt-2">
-            <input id="chat-message-input" type="text" placeholder="Type a message..."
-                class="flex-grow p-3 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-black"
-            />
-            <button id="chat-message-submit"
-                class="bg-black text-white px-5 py-3 rounded-r-lg hover:bg-gray-800 transition duration-200"
-            >Send</button>
-        </div>
+        {% if user.is_superuser %}
+            <a href="{% url 'select_chat_admin' %}"
+               class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition duration-200">
+               ⬅ Back
+            </a>
+        {% else %}
+            <a href="{% url 'select_chat' %}"
+               class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition duration-200">
+               ⬅ Back
+            </a>
+        {% endif %}
     </div>
 
-    <script>
-        const chatBoxName = "{{ chat_box_name }}";
-        const chatLog = document.getElementById("chat-log");
-        const chatInput = document.getElementById("chat-message-input");
-        const chatButton = document.getElementById("chat-message-submit");
+    <!-- กล่องข้อความ -->
+    <div id="chat-log" class="mb-4 p-4 bg-white rounded-lg shadow-inner overflow-y-auto max-h-96 space-y-2" style="height: 400px;">
+        {% for message in messages %}
+            {% if message.room.name == chat_box_name %}
+                {% if message.user == request.user %}
+                    <div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs ml-auto text-right">
+                        <strong>{{ message.user.username }}</strong>: {{ message.content }}
+                        <div class="text-xs text-gray-200">{{ message.timestamp|time:"H:i" }}</div>
+                    </div>
+                {% else %}
+                    <div class="bg-gray-300 text-black p-2 rounded-lg max-w-xs mr-auto text-left">
+                        <strong>{{ message.user.username }}</strong>: {{ message.content }}
+                        <div class="text-xs text-gray-600">{{ message.timestamp|time:"H:i" }}</div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
 
-        // ✅ สร้าง WebSocket Connection
-        const chatSocket = new WebSocket("ws://" + window.location.host + "/ws/chat/" + chatBoxName + "/");
+    <!-- กำลังพิมพ์ -->
+    <p id="typing-indicator" class="text-gray-500 text-sm hidden">...</p>
 
-        // ✅ เมื่อ WebSocket เชื่อมต่อสำเร็จ
-        chatSocket.onopen = function () {
-            console.log("✅ WebSocket connected!");
-        };
+    <!-- ช่องพิมพ์ -->
+    <div class="flex mt-2">
+        <input id="chat-message-input" type="text" placeholder="Type a message..."
+            class="flex-grow p-3 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-black"
+        />
+        <button id="chat-message-submit"
+            class="bg-black text-white px-5 py-3 rounded-r-lg hover:bg-gray-800 transition duration-200"
+        >Send</button>
+    </div>
 
-        // ✅ เมื่อได้รับข้อความจาก WebSocket
-        chatSocket.onmessage = function (event) {
-            const data = JSON.parse(event.data);
-            console.log("💬 Message received:", data);
+</div>
 
-            // ✅ ถ้ามีข้อความเก่า ให้แสดงทั้งหมด
-            if (data.previous_messages) {
-                data.previous_messages.forEach(msg => {
-                    addMessageToChatLog(msg.username, msg.message, msg.timestamp);
-                });
-            }
+<script>
+    const chatBoxName = "{{ chat_box_name }}";
+    const chatLog = document.getElementById("chat-log");
+    const chatInput = document.getElementById("chat-message-input");
+    const chatButton = document.getElementById("chat-message-submit");
 
-            // ✅ ถ้ามีข้อความใหม่ ให้แสดงที่แชท
-            if (data.message) {
-                addMessageToChatLog(data.username, data.message, data.timestamp);
-            }
-        };
+    const chatSocket = new WebSocket("ws://" + window.location.host + "/ws/chat/" + chatBoxName + "/");
 
-        // ✅ เมื่อ WebSocket ปิดการเชื่อมต่อ
-        chatSocket.onclose = function () {
-            console.error("❌ WebSocket closed unexpectedly.");
-        };
+    chatSocket.onopen = function () {
+        console.log("✅ WebSocket connected!");
+    };
 
-        // ✅ ฟังก์ชันเพิ่มข้อความลงใน `chat-log`
-        function addMessageToChatLog(username, message, timestamp = null) {
-            const now = timestamp ? new Date(timestamp) : new Date();
-            const timeString = now.getHours() + ":" + now.getMinutes().toString().padStart(2, "0");
+    chatSocket.onmessage = function (event) {
+        const data = JSON.parse(event.data);
 
-            const messageElement = document.createElement("div");
-            messageElement.classList.add("p-2", "rounded-lg", "mb-2", "max-w-xs");
+        if (data.previous_messages) {
+            data.previous_messages.forEach(msg => {
+                addMessageToChatLog(msg.username, msg.message, msg.timestamp);
+            });
+        }
+        if (data.message) {
+            addMessageToChatLog(data.username, data.message, data.timestamp);
+        }
+    };
 
-            if (username === "{{ request.user.username }}") {
-                messageElement.classList.add("bg-blue-500", "text-white", "ml-auto");
-                messageElement.style.textAlign = "right";
-            } else {
-                messageElement.classList.add("bg-gray-300", "text-black", "mr-auto");
-                messageElement.style.textAlign = "left";
-            }
+    chatSocket.onclose = function () {
+        console.error("❌ WebSocket closed unexpectedly.");
+    };
 
-            messageElement.innerHTML = `<strong>${username}</strong>: ${message}
-                <small class="text-gray-500 text-xs">(${timeString})</small>`;
+    function addMessageToChatLog(username, message, timestamp = null) {
+        const now = timestamp ? new Date(timestamp) : new Date();
+        const timeString = now.getHours() + ":" + now.getMinutes().toString().padStart(2, "0");
 
-            chatLog.appendChild(messageElement);
-            chatLog.scrollTop = chatLog.scrollHeight;
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("p-2", "rounded-lg", "mb-2", "max-w-xs");
+
+        if (username === "{{ request.user.username }}") {
+            messageElement.classList.add("bg-blue-500", "text-white", "ml-auto", "text-right");
+        } else {
+            messageElement.classList.add("bg-gray-300", "text-black", "mr-auto", "text-left");
         }
 
-        // ✅ ฟังก์ชันส่งข้อความ
-        chatButton.onclick = function () {
+        messageElement.innerHTML = `
+            <strong>${username}</strong>: ${message}
+            <div class="text-xs">${timeString}</div>
+        `;
+
+        chatLog.appendChild(messageElement);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    chatButton.onclick = function () {
+        sendMessage();
+    };
+
+    chatInput.addEventListener("keypress", function (event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
             sendMessage();
-        };
-
-        chatInput.addEventListener("keypress", function (event) {
-            if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
-            }
-        });
-
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (message) {
-                console.log("📤 Sending message:", message);
-                chatSocket.send(JSON.stringify({
-                    message: message,
-                    username: "{{ request.user.username }}"
-                }));
-                chatInput.value = "";
-            }
         }
-    </script>
+    });
+
+    function sendMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            chatSocket.send(JSON.stringify({
+                message: message,
+                username: "{{ request.user.username }}"
+            }));
+            chatInput.value = "";
+        }
+    }
+</script>
+
 </body>
 </html>
