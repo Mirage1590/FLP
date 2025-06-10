@@ -44,10 +44,24 @@
                 Total Price: <span id="total_price" data-original-price="{{ total_price }}">$ {{ final_price }}</span>
             </p>
 
-            {% if qr_code_path %}
-                <h3 class="text-l mb-4">Scan QR Code for Payment</h3>
-                <img src="{{ qr_code_path }}" alt="QR Code" class="w-32 h-32 mx-auto">
-            {% endif %}
+            <p class="font-bold text-lg mt-4">
+                Item:{{ total_item }}
+            </p>
+
+            <div id="cart-items" class="space-y-6 mt-4">
+                {% for item in cart_items %}
+                <div class="flex items-center bg-gray-100 p-4 rounded-lg shadow-md">
+                    <!-- รูปสินค้า -->
+                    <img src="{{ item.shoe.image }}" alt="{{ item.shoe.model }}" class="w-24 h-24 object-contain rounded-md">
+                    <!-- รายละเอียดสินค้า -->
+                    <div class="flex-1 ml-6">
+                        <h3 class="text-lg font-semibold text-gray-800">{{ item.shoe.brand }} - {{ item.shoe.model }}</h3>
+                        <p class="text-gray-600">Size: {{ item.shoe.size }}</p>
+                        <span id="unit-price-{{ item.id }}" class="text-blue-600 font-semibold" data-price="{{ item.shoe.price }}">${{ item.shoe.price }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
 
             <button type="submit" class="bg-blue-500 text-white w-full p-3 rounded mt-4 hover:bg-blue-600 transition duration-300">
                 Continue
@@ -89,6 +103,21 @@
                 const finalConverted = finalPriceUSD * rate;
 
                 totalPriceElement.textContent = `${symbol}${finalConverted.toFixed(2)}`;
+                updateUnitPrices();
+            }
+
+            const unitPrices = document.querySelectorAll("[id^='unit-price-']");
+
+            function updateUnitPrices() {
+                const selectedCurrency = currencySelect.value;
+                const rate = selectedCurrency === "THB" ? 30 : 1;
+                const symbol = selectedCurrency === "THB" ? "฿" : "$";
+
+                unitPrices.forEach(el => {
+                    const original = parseFloat(el.getAttribute("data-price"));
+                    const converted = (original * rate).toFixed(2);
+                    el.textContent = `${symbol}${converted}`;
+                });
             }
 
             // Trigger update when coupon or currency is changed

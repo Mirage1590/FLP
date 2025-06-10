@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .models import Profile, Shoe,ShoeLike,Cart,Order, OrderItem,Coupon,UserCoupon,ChatRoom,Review
-from .forms import ProfileForm,ReviewForm
+from .forms import ProfileForm,ReviewForm,ShoeForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.db import IntegrityError
@@ -557,6 +557,7 @@ def checkout(request):
 def checkout_view(request):
     cart_items = Cart.objects.filter(user=request.user)
     total_price = sum(item.price * item.quantity for item in cart_items)
+    total_item = sum(item.quantity for item in cart_items)
 
     user_coupons = UserCoupon.objects.filter(user=request.user, saved=True, coupon__status='active')
     coupons = [user_coupon.coupon for user_coupon in user_coupons if user_coupon.coupon.expiry_date >= timezone.now() and user_coupon.coupon.status != 'used']
@@ -662,6 +663,7 @@ def checkout_view(request):
     context = {
         'cart_items': cart_items,
         'total_price': total_price,
+        'total_item': total_item,
         'final_price': final_price,
         'coupons': coupons,
     }
@@ -970,11 +972,14 @@ def admin_dashboard_view(request):
     # คำนวณจำนวนผู้ใช้ทั้งหมด
     total_users = User.objects.count()
 
+    total_shoes = Shoe.objects.count()
+
     context = {
         'total_orders': total_orders,
         'total_revenue': total_revenue,
         'active_coupons': active_coupons,
         'total_users': total_users,
+        'total_shoes': total_shoes,
     }
 
     return render(request, 'admin_dashboard.html', context)
@@ -1113,6 +1118,45 @@ def payment_detail(request, payment_id):
         'order': order
     }
     return render(request, 'payment_detail.html', context)
+
+def shoe_list(request):
+    shoes = Shoe.objects.all()
+    query = request.GET.get('q')
+    brand_filter = request.GET.get('brand')
+
+    if query:
+        shoes = shoes.filter(model__icontains=query)
+
+    if brand_filter and brand_filter != 'all':
+        shoes = shoes.filter(brand=brand_filter)
+
+    brands = Shoe.objects.values_list('brand', flat=True).distinct()
+    return render(request, 'admin_shoe_list.html', {
+        'shoes': shoes,
+        'brands': brands,
+        'selected_brand': brand_filter,
+        'search_query': query,
+    })
+
+def add_shoe(request):
+    form = ShoeForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        form.save()
+        return redirect('shoe_list')
+    return render(request, 'admin_shoe_form.html', {'form': form})
+
+def edit_shoe(request, shoe_id):
+    shoe = Shoe.objects.get(id=shoe_id)
+    form = ShoeForm(request.POST or None, request.FILES or None, instance=shoe)
+    if form.is_valid():
+        form.save()
+        return redirect('shoe_list')
+    return render(request, 'admin_shoe_form.html', {'form': form})
+
+def delete_shoe(request, shoe_id):
+    shoe = Shoe.objects.get(id=shoe_id)
+    shoe.delete()
+    return redirect('shoe_list')
 
 @login_required
 def chat_box(request, chat_box_name):
