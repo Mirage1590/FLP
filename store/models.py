@@ -30,6 +30,10 @@ class Shoe(models.Model):
         ('Converse', 'Converse'),
         ('Puma', 'Puma'),
         ('Jordan', 'Jordan'),
+        ('Asics', 'Asics'),
+        ('Fila', 'Fila'),
+        ('New Balance', 'New Balance'),
+        ('Vans', 'Vans'),
     ]
 
     GENDER_CHOICES = [
@@ -44,6 +48,17 @@ class Shoe(models.Model):
         ('Casual', 'Casual'),
         ('Lifestyle', 'Lifestyle'),
         ('Accessories', 'Accessories'),
+        ('Cross-training', 'Cross-training'),
+        ('Crossfit', 'Crossfit'),
+        ('Fashion', 'Fashion'),
+        ('Racing', 'Racing'),
+        ('Retro', 'Retro'),
+        ('Skate', 'Skate'),
+        ('Slides', 'Slides'),
+        ('Trail', 'Trail'),
+        ('Trail Running', 'Trail Running'),
+        ('Training', 'Training'),
+        ('Weightlifting', 'Weightlifting'),
     ]
 
     MATERIAL_CHOICES = [

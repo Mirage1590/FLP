@@ -18,7 +18,7 @@ from decimal import Decimal
 from django.utils.timezone import now,make_aware
 from datetime import datetime
 from django.utils import timezone
-from django.db.models import Sum,Avg
+from django.db.models import Sum,Avg,Q
 import stripe
 
 
@@ -1222,7 +1222,11 @@ def search_shoes(request):
     results = []
 
     if query:
-        shoes = Shoe.objects.filter(model__icontains=query)
+        shoes = Shoe.objects.filter(
+            Q(model__icontains=query) |
+            Q(brand__icontains=query) |
+            Q(shoe_type__icontains=query)
+        )
         for shoe in shoes:
             results.append({
                 'id': shoe.id,
