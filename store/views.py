@@ -1123,6 +1123,7 @@ def shoe_list(request):
     shoes = Shoe.objects.all()
     query = request.GET.get('q')
     brand_filter = request.GET.get('brand')
+    type_filter = request.GET.get('shoe_type')
 
     if query:
         shoes = shoes.filter(model__icontains=query)
@@ -1130,11 +1131,17 @@ def shoe_list(request):
     if brand_filter and brand_filter != 'all':
         shoes = shoes.filter(brand=brand_filter)
 
+    if type_filter and type_filter != 'all':
+        shoes = shoes.filter(type=type_filter)
+
     brands = Shoe.objects.values_list('brand', flat=True).distinct()
+    types = Shoe.objects.values_list('shoe_type', flat=True).distinct()
     return render(request, 'admin_shoe_list.html', {
         'shoes': shoes,
         'brands': brands,
+        'types': types,
         'selected_brand': brand_filter,
+        'selected_type': type_filter,
         'search_query': query,
     })
 

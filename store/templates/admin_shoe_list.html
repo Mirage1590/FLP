@@ -32,6 +32,13 @@
         {% endfor %}
       </select>
 
+      <select id="typeFilter" class="w-full md:w-36 border border-gray-300 rounded px-4 py-2 shadow-sm">
+        <option value="all">All Types</option>
+        {% for t in types %}
+          <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+      </select>
+
       <a href="{% url 'add_shoe' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded shadow md:ml-auto">+ Add Shoe</a>
     </div>
 
@@ -39,7 +46,8 @@
       {% for shoe in shoes %}
       <div class="shoe-card bg-white shadow rounded-lg p-4"
            data-model="{{ shoe.model|lower }}"
-           data-brand="{{ shoe.brand }}">
+           data-brand="{{ shoe.brand }}"
+           data-type="{{ shoe.shoe_type }}">
         <img src="{{ shoe.image }}" alt="{{ shoe.model }}" class="h-40 object-contain w-full mb-4">
         <h2 class="text-xl font-bold text-gray-700">{{ shoe.brand }} - {{ shoe.model }}</h2>
         <p class="text-gray-500">Type: {{ shoe.shoe_type }}</p>
@@ -62,20 +70,24 @@
   document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.getElementById('searchInput');
     const brandFilter = document.getElementById('brandFilter');
+    const typeFilter = document.getElementById('typeFilter');
     const shoeCards = document.querySelectorAll('.shoe-card');
 
     function filterShoes() {
       const searchText = searchInput.value.toLowerCase();
       const selectedBrand = brandFilter.value;
+      const selectedType = typeFilter.value;
 
       shoeCards.forEach(card => {
         const model = card.dataset.model;
         const brand = card.dataset.brand;
+        const type = card.dataset.type;
 
         const matchModel = model.includes(searchText);
         const matchBrand = (selectedBrand === 'all' || brand === selectedBrand);
+        const matchType = (selectedType === 'all' || type === selectedType);
 
-        if (matchModel && matchBrand) {
+        if (matchModel && matchBrand && matchType) {
           card.style.display = 'block';
         } else {
           card.style.display = 'none';
@@ -85,6 +97,7 @@
 
     searchInput.addEventListener('input', filterShoes);
     brandFilter.addEventListener('change', filterShoes);
+    typeFilter.addEventListener('change', filterShoes);
   });
 </script>
 
